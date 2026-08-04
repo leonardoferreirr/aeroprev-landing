@@ -42,6 +42,15 @@
   --campo-linha:#CBB7AA;
   --campo-fraco:#7A6862;
 
+  /* ilha: todo bloco que carrega conteudo volta a ser papel claro.
+     o fundo da pagina segue noturno, o conteudo nao. */
+  --ilha:#FBF6F2;            /* superficie do bloco */
+  --ilha-fundo:#F1E6DE;      /* um degrau abaixo, para rodape e hover */
+  --ilha-linha:#E2D2C8;      /* fio entre blocos claros vizinhos */
+
+  --aviso:#E4736A;           /* erro sobre fundo escuro */
+  --foco:#D9BC9F;            /* anel de foco; vira bordo dentro do bloco claro */
+
   /* tipografia */
   --serif:'Newsreader',ui-serif,Georgia,serif;
   --sans:'Instrument Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
@@ -113,20 +122,41 @@ em,.it{font-style:italic}
   transition:transform .48s var(--curva);
 }
 .bt:hover::after,.bt:focus-visible::after{transform:scaleY(1)}
-.bt-cheio{background:var(--dourado);color:#171114;font-weight:600}
-.bt-cheio::after{background:var(--creme)}
-.bt-linha{border-color:var(--linha);color:var(--tinta);background:transparent}
-.bt-linha::after{background:var(--dourado)}
-.bt-linha:hover,.bt-linha:focus-visible{color:#171114;border-color:var(--dourado)}
-.bt-claro{border-color:var(--linha);color:var(--creme);background:transparent}
-.bt-claro::after{background:var(--dourado)}
-.bt-claro:hover,.bt-claro:focus-visible{color:#171114;border-color:var(--dourado)}
+
+/* ouro com profundidade: o gradiente desce do ouro medio ao bronze e ganha
+   uma linha de luz na aresta de cima. os tres tons ficam escuros o bastante
+   para o texto branco passar em AA (4.8:1 no ponto mais claro do degrade).
+   o brilho atravessa no hover e sai do botao, entao nem o estado parado nem
+   o estado de hover deixam texto branco sobre area clara. */
+.bt-cheio,.bt-linha,.bt-claro{
+  background:linear-gradient(135deg,#96693A 0%,#7A5227 48%,#573A17 100%);
+  color:#FFF;font-weight:600;border-color:rgba(255,255,255,.17);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.26),
+             inset 0 -1px 0 rgba(0,0,0,.34),
+             0 10px 26px -18px rgba(0,0,0,.9);
+}
+.bt-cheio::after,.bt-linha::after,.bt-claro::after{
+  background:linear-gradient(104deg,transparent 34%,rgba(255,255,255,.42) 50%,transparent 66%);
+  transform:translateX(-145%);transform-origin:center;
+  transition:transform .85s var(--curva);
+}
+.bt-cheio:hover::after,.bt-cheio:focus-visible::after,
+.bt-linha:hover::after,.bt-linha:focus-visible::after,
+.bt-claro:hover::after,.bt-claro:focus-visible::after{transform:translateX(145%)}
+.bt-cheio:hover,.bt-cheio:focus-visible,
+.bt-linha:hover,.bt-linha:focus-visible,
+.bt-claro:hover,.bt-claro:focus-visible{
+  color:#FFF;border-color:rgba(255,255,255,.3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.34),
+             inset 0 -1px 0 rgba(0,0,0,.34),
+             0 12px 30px -16px rgba(0,0,0,.9);
+}
 .bt .seta{transition:transform .45s var(--curva)}
 .bt:hover .seta{transform:translateX(4px)}
 .bt[disabled]{opacity:.4;pointer-events:none}
 
 :where(a,button,input,select,textarea,[tabindex]):focus-visible{
-  outline:2px solid var(--dourado);outline-offset:3px;border-radius:1px;
+  outline:2px solid var(--foco);outline-offset:3px;border-radius:1px;
 }
 
 /* =========================================================
@@ -134,7 +164,11 @@ em,.it{font-style:italic}
    ========================================================= */
 #abertura{
   position:fixed;inset:0;z-index:200;display:grid;place-items:center;
-  background:var(--vinho-marca);
+  /* mesmo desenho de luz do hero, so que em bordo: um halo atras da marca
+     e a cor caindo para quase preto embaixo */
+  background:
+    radial-gradient(ellipse at 50% 44%,rgba(122,27,29,.34) 0%,rgba(122,27,29,0) 60%),
+    linear-gradient(172deg,#2C1216 0%,#1E0C10 46%,#120709 100%);
 }
 /* abertura invertida: o fundo assume o bordo da marca e o traco vira branco */
 #abertura .marca{--peca-vinho:#FFFFFF;--peca-dourado:#EBD5BB}
@@ -248,12 +282,12 @@ em,.it{font-style:italic}
    FORMULARIO — cartao do hero
    ========================================================= */
 .cartao{
-  background:#1E1619;border:1px solid var(--linha);border-radius:3px;
+  border:1px solid var(--ilha-linha);border-radius:3px;
   box-shadow:var(--sombra-alta);position:relative;overflow:hidden;
 }
 .cartao::before{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,var(--dourado-esc),var(--dourado));
+  background:linear-gradient(90deg,var(--vinho),var(--dourado));
 }
 .cartao-topo{padding:clamp(24px,2.6vw,32px) clamp(24px,2.6vw,34px) 0}
 .cartao-topo h2{font-size:clamp(1.42rem,1.95vw,1.72rem);letter-spacing:-.015em}
@@ -261,9 +295,9 @@ em,.it{font-style:italic}
 .cartao-corpo{padding:clamp(20px,2.2vw,26px) clamp(24px,2.6vw,34px) clamp(24px,2.6vw,32px)}
 .cartao-pe{
   padding:1.05rem clamp(24px,2.6vw,34px);border-top:1px solid var(--linha-fraca);
-  background:#241A1D;display:flex;align-items:center;gap:.6rem;
+  background:var(--ilha-fundo);display:flex;align-items:center;gap:.6rem;
 }
-.cartao-pe svg{width:15px;height:15px;color:var(--dourado-esc);flex-shrink:0}
+.cartao-pe svg{width:15px;height:15px;color:var(--vinho);flex-shrink:0}
 .cartao-pe span{font-size:.785rem;color:var(--tinta-media);line-height:1.45}
 
 /* ---------- campos ---------- */
@@ -296,7 +330,7 @@ em,.it{font-style:italic}
 }
 .campo input::placeholder,.campo textarea::placeholder{color:var(--campo-fraco)}
 .campo.erro input,.campo.erro select,.campo.erro textarea{border-color:#B4342F;background:#FBEDEB}
-.campo .aviso{font-size:.775rem;color:#E4736A;display:none;align-items:center;gap:.35rem}
+.campo .aviso{font-size:.775rem;color:var(--aviso);display:none;align-items:center;gap:.35rem}
 .campo.erro .aviso{display:flex}
 
 /* opcoes (radio/checkbox estilizados) */
@@ -335,8 +369,10 @@ em,.it{font-style:italic}
    BLOCOS DE CONTEUDO
    ========================================================= */
 .faixa-escura{background:#1D1418;color:var(--tinta);position:relative;overflow:hidden}
-.faixa-escura h2,.faixa-escura h3{color:var(--creme)}
-.faixa-escura .lead,.faixa-escura p{color:var(--tinta-media)}
+/* :where zera a especificidade: assim um bloco claro dentro da faixa escura
+   consegue reescrever a cor do proprio texto sem precisar de seletor longo */
+.faixa-escura :where(h2,h3){color:var(--creme)}
+.faixa-escura :where(.lead,p){color:var(--tinta-media)}
 .faixa-creme{background:var(--creme-claro)}
 
 /* declaracao: faixa editorial de transicao */
@@ -378,18 +414,20 @@ em,.it{font-style:italic}
 .rm-item{display:grid;gap:1.05rem;align-content:start;position:relative}
 .rm-no{
   width:46px;height:46px;border-radius:50%;flex-shrink:0;
-  border:1.5px solid var(--linha);background:#1D161A;
+  border:1.5px solid var(--ilha-linha);background:var(--ilha);
   display:grid;place-items:center;position:relative;z-index:1;
   transition:border-color .55s var(--curva),background-color .55s var(--curva),
              transform .55s var(--curva);
 }
 .rm-no b{
   font-family:var(--serif);font-style:italic;font-size:.92rem;font-weight:400;
-  color:var(--dourado-texto);transition:color .55s var(--curva);
+  color:#8A6748;transition:color .55s var(--curva);
   font-variant-numeric:tabular-nums;
 }
-.rm-item.aceso .rm-no{border-color:var(--dourado);background:var(--dourado);transform:scale(1.06)}
-.rm-item.aceso .rm-no b{color:#171114}
+/* o no apagado e papel claro, o aceso vira o bordo da marca com aro dourado:
+   a troca de claro para escuro le o progresso melhor que dois tons de bege */
+.rm-item.aceso .rm-no{border-color:var(--dourado);background:var(--vinho-marca);transform:scale(1.06)}
+.rm-item.aceso .rm-no b{color:var(--creme)}
 .rm-txt h3{font-size:clamp(1.14rem,1.4vw,1.32rem);margin-bottom:.5rem;transition:color .5s var(--curva)}
 .rm-txt p{font-size:.905rem;color:var(--tinta-media);line-height:1.62;max-width:34ch}
 .rm-item.aceso .rm-txt h3{color:var(--dourado)}
@@ -421,7 +459,7 @@ em,.it{font-style:italic}
 @media(min-width:860px){.publico{grid-template-columns:1fr 1fr}}
 .publico-card{
   padding:clamp(30px,3.2vw,46px);border-radius:3px;position:relative;overflow:hidden;
-  background:#1D161A;border:1px solid var(--linha);
+  border:1px solid var(--ilha-linha);
   transition:transform .55s var(--curva),box-shadow .55s var(--curva);
 }
 .publico-card:hover{transform:translateY(-4px);box-shadow:var(--sombra)}
@@ -433,24 +471,24 @@ em,.it{font-style:italic}
   content:'';width:5px;height:5px;border-radius:50%;background:var(--dourado);flex-shrink:0;
   transform:translateY(-2px);
 }
-.publico-card .glifo{position:absolute;right:-38px;bottom:-38px;width:190px;opacity:.09;color:var(--dourado);pointer-events:none}
+.publico-card .glifo{position:absolute;right:-38px;bottom:-38px;width:190px;opacity:.055;color:var(--vinho);pointer-events:none}
 
 /* pilares */
-.pilares{display:grid;gap:1px;background:var(--linha-fraca)}
+.pilares{display:grid;gap:1px;background:var(--ilha-linha)}
 @media(min-width:720px){.pilares{grid-template-columns:1fr 1fr}}
 @media(min-width:1060px){.pilares{grid-template-columns:repeat(4,1fr)}}
-.pilar{background:#1D1418;padding:clamp(26px,2.8vw,38px);display:grid;align-content:start;gap:.8rem}
-.pilar svg{width:28px;height:28px;color:var(--dourado)}
+.pilar{padding:clamp(26px,2.8vw,38px);display:grid;align-content:start;gap:.8rem}
+.pilar svg{width:28px;height:28px;color:var(--vinho)}
 .pilar h3{font-size:clamp(1.08rem,1.3vw,1.22rem)}
 .pilar p{font-size:.895rem;color:var(--tinta-media);line-height:1.6}
 
 /* documentos */
-.docs{display:grid;gap:1px;background:var(--linha);border:1px solid var(--linha)}
+.docs{display:grid;gap:1px;background:var(--ilha-linha);border:1px solid var(--ilha-linha)}
 @media(min-width:680px){.docs{grid-template-columns:1fr 1fr}}
 @media(min-width:1020px){.docs{grid-template-columns:repeat(3,1fr)}}
-.doc{background:#1D161A;padding:clamp(22px,2.3vw,30px);display:grid;gap:.5rem;align-content:start;transition:background-color .4s var(--curva)}
-.doc:hover{background:#241A1E}
-.doc .sigla{font-family:var(--serif);font-size:1.16rem;color:var(--dourado);letter-spacing:-.01em}
+.doc{padding:clamp(22px,2.3vw,30px);display:grid;gap:.5rem;align-content:start;transition:background-color .4s var(--curva)}
+.doc:hover{background:var(--ilha-fundo)}
+.doc .sigla{font-family:var(--serif);font-size:1.16rem;color:var(--vinho);letter-spacing:-.01em}
 .doc p{font-size:.875rem;color:var(--tinta-media);line-height:1.55}
 
 /* faq: titulo fixo a esquerda, perguntas a direita */
@@ -621,13 +659,13 @@ em,.it{font-style:italic}
 
 /* ---------- repetidor de vinculos ---------- */
 .vinculo{
-  border:1px solid var(--linha);border-radius:3px;padding:clamp(18px,2vw,24px);
-  display:grid;gap:1.05rem;position:relative;background:#1E1619;
+  border:1px solid var(--ilha-linha);border-radius:3px;padding:clamp(18px,2vw,24px);
+  display:grid;gap:1.05rem;position:relative;
   animation:entra-etapa .42s var(--curva) both;
 }
 .vinculo-topo{display:flex;align-items:center;justify-content:space-between;gap:1rem}
 .vinculo-topo h4{
-  font-family:var(--serif);font-size:1.06rem;color:var(--dourado);font-style:italic;
+  font-family:var(--serif);font-size:1.06rem;color:var(--vinho);font-style:italic;
 }
 .vinculo-remove{
   background:none;border:0;cursor:pointer;color:var(--tinta-fraca);font-size:.8rem;
@@ -676,11 +714,11 @@ em,.it{font-style:italic}
 /* ---------- matriz de documentos ---------- */
 .matriz{display:grid;gap:.55rem}
 .linha-doc{
-  display:grid;gap:.7rem;padding:.85em 1em;border:1px solid var(--linha);border-radius:2px;
+  display:grid;gap:.7rem;padding:.85em 1em;border:1px solid var(--ilha-linha);border-radius:2px;
   transition:border-color .3s var(--curva),background-color .3s var(--curva);
 }
 @media(min-width:660px){.linha-doc{grid-template-columns:minmax(0,1fr) auto;align-items:center}}
-.linha-doc.marcado{border-color:var(--dourado);background:#241A1D}
+.linha-doc.marcado{border-color:var(--dourado-esc);background:#F6EDE5}
 .linha-doc .rot{font-size:.9rem;font-weight:500;line-height:1.4}
 .doc-opcoes{display:flex;gap:.4rem;flex-wrap:wrap}
 .doc-op{
@@ -735,14 +773,14 @@ em,.it{font-style:italic}
 }
 .wz-fim .visto{
   width:66px;height:66px;border-radius:50%;display:grid;place-items:center;
-  background:#241A1D;border:1px solid var(--dourado);margin-bottom:.5rem;
+  border:1px solid var(--dourado-esc);margin-bottom:.5rem;
 }
-.wz-fim .visto svg{width:28px;height:28px;color:var(--dourado)}
+.wz-fim .visto svg{width:28px;height:28px;color:var(--vinho)}
 .wz-fim h2{font-size:clamp(1.85rem,3.4vw,2.6rem)}
 .wz-fim p{color:var(--tinta-media);line-height:1.65;max-width:46ch}
 .wz-fim .protocolo{
-  margin-top:.6rem;padding:1rem 1.5rem;border:1px solid var(--linha);border-radius:3px;
-  background:#241A1D;font-family:var(--serif);font-size:1.1rem;
+  margin-top:.6rem;padding:1rem 1.5rem;border:1px solid var(--ilha-linha);border-radius:3px;
+  font-family:var(--serif);font-size:1.1rem;
 }
 .wz-fim .protocolo span{display:block;font-family:var(--sans);font-size:.735rem;
   letter-spacing:.09em;text-transform:uppercase;color:var(--tinta-fraca);margin-bottom:.3rem}
@@ -790,3 +828,44 @@ em,.it{font-style:italic}
 .legal .voltar:hover svg{transform:translateX(-3px)}
 .topo-simples{position:static;border-bottom:1px solid var(--linha-fraca);background:#1B1417}
 .topo-simples .marca-topo img{height:clamp(46px,4.4vw,56px);width:auto;filter:brightness(0) invert(1) sepia(.3) saturate(1.6) hue-rotate(342deg)}
+
+/* =========================================================
+   CONTEINERES CLAROS
+   O fundo da pagina e as faixas seguem noturnos; todo bloco que
+   carrega conteudo volta a ser papel claro com tinta escura, como
+   na v1. Cada bloco redefine os tokens no proprio escopo, entao as
+   regras internas continuam valendo sem precisar ser duplicadas.
+   ========================================================= */
+.cartao,.publico-card,.pilar,.doc,.vinculo,.linha-doc,
+.wz-fim .visto,.wz-fim .protocolo{
+  --tinta:#1A1112;
+  --tinta-media:#635250;
+  --tinta-fraca:#8E7C79;
+  --linha:#E7D8CE;
+  --linha-fraca:#F0E5DD;
+  --vinho:#7A1B1D;
+  --vinho-esc:#5E1416;
+  --vinho-prof:#2C0A0B;
+  --dourado:#CDAB91;
+  --dourado-esc:#A9866B;
+  --dourado-texto:#8A6748;
+  --creme:#F8E0D2;
+  --creme-claro:#FCF1E9;
+  --aviso:#B4342F;
+  --foco:#7A1B1D;
+  background:var(--ilha);
+  color:var(--tinta);
+}
+/* dentro de .faixa-escura os titulos sao pintados de creme; num bloco claro
+   isso os apagaria, entao aqui eles voltam a puxar a tinta do proprio bloco */
+:is(.cartao,.publico-card,.pilar,.doc,.vinculo,.linha-doc) :is(h2,h3){color:var(--tinta)}
+
+/* o halo de foco troca de lado dentro do bloco claro */
+.cartao .campo :is(input,select,textarea):focus,
+.vinculo .campo :is(input,select,textarea):focus{
+  border-color:var(--vinho);box-shadow:0 0 0 3px rgba(122,27,29,.13);
+}
+/* dentro do bloco claro a opcao marcada precisa ficar mais quente que a
+   solta, senao a marcacao le como se estivesse apagada */
+.vinculo .opcao:has(input:checked),
+.linha-doc .opcao:has(input:checked){background:#F8E7E1}

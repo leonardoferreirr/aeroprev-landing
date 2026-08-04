@@ -9,7 +9,7 @@ so que minificado. Rode antes de cada deploy:
 """
 import os, re, shutil, subprocess, sys
 
-RAIZ = os.path.dirname(os.path.abspath(__file__))
+RAIZ = os.getcwd() if '--somente-dist' in sys.argv else os.path.dirname(os.path.abspath(__file__))
 DIST = os.path.join(RAIZ, 'dist')
 PAGINAS = ['index.html', 'privacidade.html', 'termos.html']
 
@@ -91,6 +91,39 @@ def build():
     print(f'\ndist/ pronto: {tot/1024:.0f} KB no total')
 
 
+
+
+def build_completo():
+    """Gera publico/: a v1 na raiz e a v2 (tema escuro) em /v2."""
+    import subprocess
+    PUB = os.path.join(RAIZ, 'publico')
+    build()                                    # gera dist/ da v1
+    if os.path.isdir(PUB):
+        shutil.rmtree(PUB)
+    shutil.copytree(DIST, PUB)
+
+    v2 = os.path.join(RAIZ, 'v2')
+    if os.path.isdir(v2):
+        print('\ngerando v2/ (tema escuro)')
+        r = subprocess.run([sys.executable, os.path.abspath(__file__), '--somente-dist'],
+                           cwd=v2, capture_output=True, text=True)
+        print(r.stdout.strip() or r.stderr.strip()[-400:])
+        v2dist = os.path.join(v2, 'dist')
+        if os.path.isdir(v2dist):
+            shutil.copytree(v2dist, os.path.join(PUB, 'v2'))
+
+    for extra in ['vercel.json']:
+        o = os.path.join(RAIZ, extra)
+        if os.path.exists(o):
+            shutil.copy2(o, os.path.join(PUB, extra))
+    tot = sum(os.path.getsize(os.path.join(r, f))
+              for r, _, fs in os.walk(PUB) for f in fs)
+    print(f'\npublico/ pronto: {tot/1024:.0f} KB (v1 na raiz, v2 em /v2)')
+
+
 if __name__ == '__main__':
-    print('gerando dist/')
-    build()
+    if '--somente-dist' in sys.argv:
+        print('gerando dist/')
+        build()
+    else:
+        build_completo()

@@ -19,9 +19,9 @@ Abre em `http://localhost:8753`. O que você edita na raiz é o que aparece.
 python3 build.py
 ```
 
-Gera `dist/`, que é o que o Vercel serve (`outputDirectory` no `vercel.json`).
-O build faz três coisas: coloca o CSS inline no HTML, minifica o JavaScript e
-reescreve os caminhos das fontes.
+Gera `publico/`, que é o que o Vercel serve (`outputDirectory` no `vercel.json`):
+a versão clara na raiz e a escura em `/v2`. O build coloca o CSS inline no HTML,
+minifica o JavaScript e reescreve os caminhos das fontes.
 
 **Rode o build antes de todo commit que vá para produção.** Editar só a raiz e
 esquecer o `dist/` publica a versão antiga.
@@ -39,6 +39,25 @@ assets/js/formulario.js  formulário de pré-análise em 10 etapas
 assets/fonts/         Newsreader e Instrument Sans, subsetadas para pt-BR
 build.py              gera dist/
 ```
+
+## As duas versões
+
+`/` é a versão clara, original. `v2/` é a mesma página com o tema invertido:
+fundo grafite com viés bordô, texto em creme e o dourado como cor de acento.
+
+A inversão foi possível porque a paleta inteira vive em custom properties e as
+peças da marca leem `--peca-vinho` e `--peca-dourado`, que atravessam o `<use>`.
+Fora a paleta, quatro coisas precisaram de tratamento próprio:
+
+- As faixas que **já eram escuras** (diferenciais e chamada final) viraram o
+  contraponto claro, senão desapareceriam no fundo escuro.
+- A **abertura** ganhou fundo no bordô da marca com o traço em branco.
+- O **formulário** teve todas as superfícies, focos, erros e uploads redesenhados.
+- O **bordô original não passa em AA sobre escuro**, então virou `--vinho-marca`,
+  usado só na abertura; como cor de texto entrou um tom mais claro.
+
+Para mexer só na v2, edite `v2/assets/css/site.css`. As duas versões são
+independentes: mudança em uma não afeta a outra.
 
 ## A marca
 

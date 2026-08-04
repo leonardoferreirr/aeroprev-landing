@@ -227,12 +227,6 @@ em,.it{font-style:italic}
 @media(min-width:1020px){.hero h1{font-size:clamp(2.85rem,4vw,3.9rem);max-width:19ch}}
 .hero h1 em{color:var(--vinho)}
 .hero .lead{max-width:33rem}
-.hero-selos{
-  display:flex;flex-wrap:wrap;gap:.62rem 1.35rem;margin-top:2.3rem;
-  padding-top:1.6rem;border-top:1px solid var(--linha);
-}
-.hero-selo{display:flex;align-items:center;gap:.5rem;font-size:.815rem;color:var(--tinta-media);font-weight:500;white-space:nowrap}
-.hero-selo svg{width:16px;height:16px;color:var(--dourado-esc);flex-shrink:0}
 
 /* =========================================================
    FORMULARIO — cartao do hero
@@ -353,19 +347,57 @@ em,.it{font-style:italic}
   opacity:.06;color:var(--vinho);pointer-events:none;
 }
 
-/* passos */
-.passos{display:grid;gap:1px;background:var(--linha);border:1px solid var(--linha)}
-@media(min-width:760px){.passos{grid-template-columns:repeat(4,1fr)}}
-.passo{background:var(--papel);padding:clamp(26px,2.6vw,36px);display:grid;align-content:start;gap:.85rem;position:relative;transition:background-color .45s var(--curva)}
-.passo:hover{background:var(--creme-claro)}
-.passo .num{
-  font-family:var(--serif);font-size:1rem;color:var(--dourado-texto);
-  font-variant-numeric:tabular-nums;font-style:italic;
+/* roadmap: horizontal no desktop, vertical no celular, preenche com o scroll */
+.roadmap{
+  list-style:none;margin:0;padding:0;position:relative;--p:0;
+  display:grid;gap:clamp(28px,3vw,40px);
 }
-.passo h3{font-size:clamp(1.14rem,1.4vw,1.3rem)}
-.passo p{font-size:.905rem;color:var(--tinta-media);line-height:1.6}
-.passo .risco{position:absolute;left:0;top:0;height:2px;width:100%;background:var(--vinho);transform:scaleX(0);transform-origin:left;transition:transform .6s var(--curva)}
-.passo:hover .risco{transform:scaleX(1)}
+.rm-trilho{position:absolute;background:var(--linha);overflow:hidden;border-radius:2px}
+.rm-preenche{
+  display:block;width:100%;height:100%;border-radius:2px;
+  background:linear-gradient(var(--eixo,90deg),var(--vinho),var(--dourado-esc));
+  transition:transform .18s linear;
+}
+.rm-item{display:grid;gap:1.05rem;align-content:start;position:relative}
+.rm-no{
+  width:46px;height:46px;border-radius:50%;flex-shrink:0;
+  border:1.5px solid var(--linha);background:var(--papel);
+  display:grid;place-items:center;position:relative;z-index:1;
+  transition:border-color .55s var(--curva),background-color .55s var(--curva),
+             transform .55s var(--curva);
+}
+.rm-no b{
+  font-family:var(--serif);font-style:italic;font-size:.92rem;font-weight:400;
+  color:var(--dourado-texto);transition:color .55s var(--curva);
+  font-variant-numeric:tabular-nums;
+}
+.rm-item.aceso .rm-no{border-color:var(--vinho);background:var(--vinho);transform:scale(1.06)}
+.rm-item.aceso .rm-no b{color:var(--creme-claro)}
+.rm-txt h3{font-size:clamp(1.14rem,1.4vw,1.32rem);margin-bottom:.5rem;transition:color .5s var(--curva)}
+.rm-txt p{font-size:.905rem;color:var(--tinta-media);line-height:1.62;max-width:34ch}
+.rm-item.aceso .rm-txt h3{color:var(--vinho)}
+
+/* horizontal */
+@media(min-width:900px){
+  .roadmap{--g:clamp(24px,2.6vw,40px);grid-template-columns:repeat(4,1fr);gap:var(--g)}
+  /* o trilho vai do centro do primeiro no ao centro do ultimo:
+     o ultimo no fica em 75% da largura mais tres quartos do gap */
+  .rm-trilho{top:22px;left:23px;right:calc(25% - 23px - var(--g) * .75);height:3px}
+  .rm-preenche{transform:scaleX(var(--p));transform-origin:left}
+}
+/* vertical */
+@media(max-width:899px){
+  .roadmap{grid-template-columns:1fr;gap:0;--eixo:180deg}
+  .rm-item{grid-template-columns:46px minmax(0,1fr);gap:0 1.15rem;padding-bottom:clamp(28px,5vw,40px)}
+  .rm-item:last-child{padding-bottom:0}
+  .rm-trilho{top:23px;bottom:23px;left:22px;width:3px}
+  .rm-preenche{transform:scaleY(var(--p));transform-origin:top}
+  .rm-txt{padding-top:.35rem}
+}
+@media(prefers-reduced-motion:reduce){
+  .rm-preenche{transform:none!important}
+  .rm-item .rm-no{border-color:var(--vinho)}
+}
 
 /* publico */
 .publico{display:grid;gap:clamp(20px,2.4vw,28px)}
@@ -391,7 +423,7 @@ em,.it{font-style:italic}
 @media(min-width:720px){.pilares{grid-template-columns:1fr 1fr}}
 @media(min-width:1060px){.pilares{grid-template-columns:repeat(4,1fr)}}
 .pilar{background:var(--vinho-prof);padding:clamp(26px,2.8vw,38px);display:grid;align-content:start;gap:.8rem}
-.pilar svg{width:26px;height:26px;color:var(--dourado)}
+.pilar svg{width:28px;height:28px;color:var(--dourado)}
 .pilar h3{font-size:clamp(1.08rem,1.3vw,1.22rem)}
 .pilar p{font-size:.895rem;color:rgba(248,224,210,.66);line-height:1.6}
 
@@ -446,30 +478,17 @@ em,.it{font-style:italic}
   position:absolute;right:-14%;top:50%;translate:0 -50%;
   width:min(90vw,860px);opacity:.07;color:var(--creme);pointer-events:none;
 }
-.chamada-acao{display:grid;gap:1.15rem;justify-items:start}
+.chamada-acao{display:grid;gap:1.15rem;justify-items:start;align-content:center}
 @media(min-width:920px){.chamada-acao{justify-items:stretch}}
 .chamada-acao .bt{width:100%;justify-content:space-between;padding-inline:1.6em}
 @media(max-width:919px){.chamada-acao .bt{width:auto;justify-content:center}}
-.chamada-passos{
-  display:grid;gap:.72rem;padding-top:1.35rem;
-  border-top:1px solid rgba(248,224,210,.18);
-}
-.chamada-passos li{
-  display:flex;align-items:baseline;gap:.72rem;
-  font-size:.885rem;color:rgba(248,224,210,.72);line-height:1.5;
-}
-.chamada-passos{list-style:none;padding-left:0;margin:0}
-.chamada-passos li::before{
-  content:counter(cp,decimal-leading-zero);counter-increment:cp;
-  font-family:var(--serif);font-style:italic;font-size:.82rem;color:var(--dourado);flex-shrink:0;
-}
-.chamada-passos{counter-reset:cp}
 
 /* rodape */
 .rodape{background:var(--vinho-noite);color:rgba(248,224,210,.66);padding-block:clamp(56px,6vw,84px) clamp(28px,3vw,38px)}
 .rodape-grade{display:grid;gap:clamp(34px,4vw,56px)}
 @media(min-width:820px){.rodape-grade{grid-template-columns:1.5fr 1fr 1fr}}
-.rodape .lockup{height:clamp(58px,5.2vw,72px);width:auto;margin-bottom:1.45rem}
+.rodape .lockup{height:clamp(58px,5.2vw,72px);width:auto;margin-bottom:1.45rem;
+  --peca-vinho:#FFFFFF;--peca-dourado:#FFFFFF}
 .rodape-sobre p{font-size:.895rem;line-height:1.65;max-width:31rem}
 .rodape-sobre .escritorio{
   margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid rgba(248,224,210,.14);

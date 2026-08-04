@@ -799,8 +799,8 @@
     var e = ETAPAS[etapaAtual];
     corpo.innerHTML = '';
     var sec = el('section', { class: 'wz-etapa' });
+    // o contador ja vive no cabecalho, ao lado da barra de progresso
     var cab = el('div', { class: 'wz-etapa-topo' }, [
-      el('span', { class: 'ordem', txt: 'Etapa ' + (etapaAtual + 1) + ' de ' + ETAPAS.length }),
       el('h2', { id: 'wz-titulo', txt: e.titulo })
     ]);
     if (e.texto) cab.appendChild(el('p', { txt: e.texto }));

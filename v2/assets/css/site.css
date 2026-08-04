@@ -593,10 +593,6 @@ em,.it{font-style:italic}
   padding:clamp(30px,4.5vw,60px) var(--gut) clamp(40px,5vw,72px);
 }
 .wz-etapa-topo{margin-bottom:clamp(24px,3vw,38px)}
-.wz-etapa-topo .ordem{
-  font-family:var(--serif);font-style:italic;font-size:.92rem;color:var(--dourado-texto);
-  display:block;margin-bottom:.55rem;
-}
 .wz-etapa-topo h2{font-size:clamp(1.72rem,3.1vw,2.4rem);letter-spacing:-.018em}
 .wz-etapa-topo p{margin-top:.85rem;color:var(--tinta-media);font-size:.955rem;line-height:1.62;max-width:52ch}
 

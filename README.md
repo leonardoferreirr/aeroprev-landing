@@ -51,10 +51,35 @@ Fora a paleta, quatro coisas precisaram de tratamento próprio:
 
 - As faixas que **já eram escuras** (diferenciais e chamada final) viraram o
   contraponto claro, senão desapareceriam no fundo escuro.
-- A **abertura** ganhou fundo no bordô da marca com o traço em branco.
+- A **abertura** ganhou o mesmo desenho de luz do hero, em bordô profundo caindo
+  para quase preto, com o traço da marca em branco.
 - O **formulário** teve todas as superfícies, focos, erros e uploads redesenhados.
 - O **bordô original não passa em AA sobre escuro**, então virou `--vinho-marca`,
   usado só na abertura; como cor de texto entrou um tom mais claro.
+
+### Blocos claros
+
+O fundo e as faixas seguem noturnos, mas todo bloco que carrega conteúdo volta a
+ser papel claro com tinta escura, como na v1: cartão do hero, cards de público,
+pilares, grade de documentos, repetidor de vínculos, matriz de documentos e o
+painel de conclusão. Cada bloco redefine os tokens no próprio escopo (bloco
+`CONTEINERES CLAROS`, no fim do CSS), então as regras internas continuam valendo
+sem precisar ser duplicadas. Três detalhes que dependem disso:
+
+- `.faixa-escura` pinta títulos e parágrafos com `:where()`, de especificidade
+  zero, justamente para o bloco claro conseguir reescrever a própria tinta.
+- Os fios entre blocos vizinhos (`.docs`, `.pilares`) usam `--ilha-linha`, senão
+  ficaria um vinco escuro entre dois cards claros.
+- O nó apagado do roadmap é papel claro e o aceso vira bordô com aro dourado: a
+  troca de claro para escuro lê o progresso melhor que dois tons de bege.
+
+### Botões
+
+Gradiente do ouro médio ao bronze com texto branco. Os três stops ficam escuros o
+bastante para o branco passar em AA (4,8:1 no ponto mais claro), e a faixa de
+brilho **atravessa e sai** do botão no hover, então nem o estado parado nem o de
+hover deixam texto branco sobre área clara. Mexer nesses valores exige remedir o
+contraste.
 
 Para mexer só na v2, edite `v2/assets/css/site.css`. As duas versões são
 independentes: mudança em uma não afeta a outra.

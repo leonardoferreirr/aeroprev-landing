@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Painel do escritório · AeroPrev</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/instrument-sans-normal-400-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+
+  <div class="demo" role="status">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+    <span><b>Demonstração.</b> As pré-análises abaixo são fictícias. O painel ainda não está ligado a um banco de dados, então nada aqui é gravado nem enviado.</span>
+  </div>
+
+  <div class="fundo-menu" id="fundoMenu"></div>
+
+  <div class="app">
+
+    <!-- ================= BARRA LATERAL ================= -->
+    <aside class="lateral" id="lateral">
+      <div class="marca">
+        <img src="assets/img/logo.svg" alt="AeroPrev" width="120" height="38">
+        <span>Painel do escritório</span>
+      </div>
+
+      <nav class="menu" aria-label="Seções do painel">
+        <h2>Atendimento</h2>
+        <a href="#painel" data-tela="painel" class="e-ativo">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+          Painel
+        </a>
+        <a href="#preanalises" data-tela="preanalises">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h5"/></svg>
+          Pré-análises
+          <span class="marcador" id="contaNovas">0</span>
+        </a>
+        <a href="#documentos" data-tela="documentos">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h6l2 2h10v10H3z"/><path d="M3 7V5h5l2 2"/></svg>
+          Documentos
+        </a>
+
+        <h2>Escritório</h2>
+        <a href="#equipe" data-tela="equipe">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 8.2A3 3 0 0119 11M17 15c2.4.5 4 2.4 4 5"/></svg>
+          Equipe
+        </a>
+        <a href="#ajustes" data-tela="ajustes">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1A1.6 1.6 0 008 19.4a1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H2a2 2 0 110-4h.1A1.6 1.6 0 004.6 8a1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V2a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H22a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z"/></svg>
+          Ajustes
+        </a>
+      </nav>
+
+      <div class="usuario">
+        <span class="avatar">SW</span>
+        <div>
+          <strong>Sartori &amp; Wöhlke</strong>
+          <span>Advocacia</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ================= PRINCIPAL ================= -->
+    <div class="principal">
+      <header class="topo">
+        <button class="abre-menu" id="abreMenu" aria-label="Abrir menu" aria-expanded="false">
+          <svg class="abre" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          <svg class="fecha" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <div class="topo-tit">
+          <h1 id="tituloTela">Painel</h1>
+          <p id="subTela">Visão geral das pré-análises recebidas</p>
+        </div>
+        <div class="busca">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+          <label for="campoBusca" class="visually-hidden" hidden>Buscar</label>
+          <input type="search" id="campoBusca" placeholder="Buscar por nome, CPF ou protocolo" autocomplete="off">
+        </div>
+      </header>
+
+      <main class="conteudo" id="conteudo"></main>
+    </div>
+  </div>
+
+  <!-- ================= FICHA ================= -->
+  <div class="fundo-ficha" id="fundoFicha"></div>
+  <aside class="ficha" id="ficha" aria-hidden="true" aria-label="Ficha da pré-análise">
+    <div class="ficha-cab">
+      <div>
+        <span class="proto" id="fichaProto"></span>
+        <h2 id="fichaNome"></h2>
+        <p class="sub" id="fichaSub"></p>
+      </div>
+      <button class="fechar" id="fechaFicha" aria-label="Fechar ficha">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="ficha-corpo" id="fichaCorpo"></div>
+    <div class="ficha-pe">
+      <button class="bt bt-cheio" type="button" data-acao="analise">Marcar em análise</button>
+      <button class="bt" type="button" data-acao="documentos">Pedir documentos</button>
+      <span class="obs">Ações desligadas na demonstração</span>
+    </div>
+  </aside>
+
+  <script src="assets/js/admin-dados.js" defer></script>
+  <script src="assets/js/admin.js" defer></script>
+</body>
+</html>

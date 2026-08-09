@@ -30,6 +30,26 @@
     ['atestados', 'Atestados'], ['prontuarios', 'Prontuários']
   ];
 
+  /* Perguntas de sim ou nao que abrem caminhos de contagem fora da aviacao.
+     Agrupadas por assunto: comeco de carreira, tipo de vinculo, saude e, por
+     fim, o que ja existe de processo ou precedente. */
+  var SITUACOES = [
+    ['rural', 'Nasceu em zona rural e trabalhou em regime de economia familiar?'],
+    ['jovem_aprendiz', 'Foi jovem aprendiz?'],
+    ['escola_tecnica', 'Fez escola técnica?'],
+    ['contrato_experiencia', 'Teve contrato de experiência?'],
+    ['autonomo', 'Foi autônomo ou contribuinte individual?'],
+    ['gps', 'Já recolheu contribuição em GPS (carnê)?'],
+    ['servico_publico', 'Exerceu serviço público concursado?'],
+    ['ctc', 'Tem certidão de tempo de contribuição?'],
+    ['exterior', 'Trabalhou fora do Brasil?'],
+    ['risco_saude', 'Teve risco à saúde ou à integridade física no trabalho?'],
+    ['pcd', 'Trabalhou como pessoa com deficiência?'],
+    ['doenca', 'Sofre ou sofreu doença que dificulta trabalhar?'],
+    ['copia_processo_adm', 'Tem cópia do processo administrativo do INSS?'],
+    ['colega_especial', 'Algum colega de trabalho conseguiu reconhecer atividade especial?']
+  ];
+
   var ETAPAS = [
     {
       id: 'identificacao', nome: 'Identificação',
@@ -184,6 +204,20 @@
             ops: ['Em andamento', 'Sentença proferida', 'Em recurso', 'Em execução', 'Encerrado', 'Não sei informar']
           }
         ]
+      }]
+    },
+
+    {
+      id: 'situacoes', nome: 'Outras situações',
+      titulo: 'Outras situações que podem contar',
+      texto: 'São perguntas rápidas. Marque apenas o que aconteceu com você. Cada sim aqui abre uma frente que a equipe vai conferir na análise, mesmo que pareça sem relação com a aviação.',
+      blocos: [{
+        campos: [{ t: 'sn', n: 'situacoes', itens: SITUACOES }]
+      }, {
+        campos: [{
+          t: 'textarea', n: 'situacoes_detalhe', r: 'Quer explicar algum dos itens que marcou?',
+          ph: 'Períodos, empresas ou o que você lembrar. Ajuda a equipe a procurar no lugar certo.'
+        }]
       }]
     },
 
@@ -402,6 +436,7 @@
     if (c.t === 'upload') return renderUpload(c);
     if (c.t === 'matriz') return renderMatriz(c);
     if (c.t === 'declaracoes') return renderDeclaracoes(c);
+    if (c.t === 'sn') return renderSimNao(c, prefixo, valores);
 
     if (rotuloTexto) caixa.appendChild(el('label', { for: id, txt: rotuloTexto }));
 
@@ -442,6 +477,42 @@
     caixa.appendChild(entrada);
     if (c.dica) caixa.appendChild(el('span', { class: 'dica', txt: c.dica }));
     caixa.appendChild(el('span', { class: 'aviso', txt: 'Preencha este campo' }));
+    return caixa;
+  }
+
+  /* ---------- lista de sim ou nao ----------
+     Guarda um objeto com todas as chaves, nao so as marcadas: quem le a ficha
+     no escritorio precisa ver o "nao" respondido, nao a ausencia do campo. */
+  function renderSimNao(c, prefixo, valores) {
+    prefixo = prefixo || '';
+    var caixa = el('div', { class: 'campo campo-sn', 'data-campo': prefixo + c.n });
+    if (c.r) caixa.appendChild(el('span', { class: 'grupo-rot', txt: c.r }));
+
+    var estado = (valores[c.n] && typeof valores[c.n] === 'object' && !Array.isArray(valores[c.n]))
+      ? valores[c.n] : {};
+    c.itens.forEach(function (it) {
+      if (estado[it[0]] !== true) estado[it[0]] = false;
+    });
+    valores[c.n] = estado;
+
+    var lista = el('div', { class: 'sn-lista', role: 'group', 'aria-label': c.r || 'Perguntas de sim ou não' });
+    c.itens.forEach(function (it) {
+      var chave = it[0];
+      var inp = el('input', { type: 'checkbox', class: 'sn-inp', role: 'switch', name: prefixo + c.n + '_' + chave });
+      inp.checked = estado[chave] === true;
+      var linha = el('label', { class: 'sn-linha' + (inp.checked ? ' e-sim' : '') }, [
+        el('span', { class: 'sn-txt', txt: it[1] }),
+        el('span', { class: 'sn-ctrl' }, [inp, el('span', { class: 'sn-trilho', 'aria-hidden': 'true' })])
+      ]);
+      inp.addEventListener('change', function () {
+        estado[chave] = inp.checked;
+        linha.classList.toggle('e-sim', inp.checked);
+        if (valores === dados) { atualizaCondicionais(); salvar(); }
+      });
+      lista.appendChild(linha);
+    });
+
+    caixa.appendChild(lista);
     return caixa;
   }
 

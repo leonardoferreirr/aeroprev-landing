@@ -42,6 +42,17 @@
   --curva-suave:cubic-bezier(.4,0,.2,1);
   --sombra:0 1px 2px rgba(44,10,11,.04),0 8px 24px -12px rgba(44,10,11,.14);
   --sombra-alta:0 2px 4px rgba(44,10,11,.05),0 24px 60px -20px rgba(44,10,11,.22);
+
+  /* lista de sim ou nao */
+  --sn-a:#FDFBFA;
+  --sn-b:#F6F1ED;
+  --sn-hover:#F2E7E0;
+  --sn-linha:var(--linha);
+  --sn-txt:var(--tinta);
+  --sn-on:var(--vinho);
+  --sn-off:#CFC3BD;
+  --sn-botao:#fff;
+  --sn-foco:rgba(122,27,29,.28);
 }
 
 *,*::before,*::after{box-sizing:border-box}
@@ -313,6 +324,43 @@ em,.it{font-style:italic}
 }
 .opcao:has(input:checked){border-color:var(--vinho);background:#FDF8F6}
 .opcao span{min-width:0}
+
+/* ---------- lista de sim ou nao ----------
+   A linha inteira e o alvo de clique, por isso o alvo de toque nao depende do
+   tamanho do interruptor. */
+.campo-sn{gap:.6rem}
+.sn-lista{
+  display:flex;flex-direction:column;
+  border:1px solid var(--sn-linha);border-radius:2px;overflow:hidden;
+}
+.sn-linha{
+  display:flex;align-items:center;justify-content:space-between;gap:1.1rem;
+  padding:.85em 1em;cursor:pointer;background:var(--sn-a);
+  transition:background-color .24s var(--curva);
+}
+.sn-linha:nth-child(even){background:var(--sn-b)}
+.sn-linha:hover{background:var(--sn-hover)}
+.sn-txt{font-size:.91rem;line-height:1.45;color:var(--sn-txt);min-width:0}
+.sn-linha.e-sim .sn-txt{font-weight:600}
+.sn-ctrl{position:relative;flex-shrink:0;width:44px;height:25px}
+.sn-inp{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.sn-trilho{
+  position:absolute;inset:0;border-radius:999px;background:var(--sn-off);
+  transition:background-color .24s var(--curva);pointer-events:none;
+}
+.sn-trilho::after{
+  content:'';position:absolute;top:3px;left:3px;width:19px;height:19px;
+  border-radius:50%;background:var(--sn-botao);
+  box-shadow:0 1px 3px rgba(28,6,7,.28);
+  transition:transform .24s var(--curva);
+}
+.sn-inp:checked+.sn-trilho{background:var(--sn-on)}
+.sn-inp:checked+.sn-trilho::after{transform:translateX(19px)}
+.sn-inp:focus-visible+.sn-trilho{box-shadow:0 0 0 3px var(--sn-foco)}
+@media(prefers-reduced-motion:reduce){
+  .sn-linha,.sn-trilho,.sn-trilho::after{transition:none}
+}
+
 
 /* =========================================================
    BLOCOS DE CONTEUDO

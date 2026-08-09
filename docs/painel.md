@@ -19,8 +19,27 @@ São quatro peças, nesta ordem de dependência:
 
 ### 1. Login (bloqueante, não é opcional)
 
-O painel não pode ir ao ar com dados reais sem autenticação. Hoje qualquer
-pessoa que digitar `/admin` vê tudo. O `noindex` tira do Google, mas não
+Existe uma tela em `/login`, e o `/admin` redireciona para ela quando não há
+sessão. **Isso é fluxo, não segurança.** A conferência roda no navegador de
+quem acessa: basta abrir o console e gravar a chave de sessão à mão para
+entrar. O código está num repositório público, então nem o hash da senha
+esconde alguma coisa.
+
+Serve enquanto o painel só tem dados fictícios, e mostra ao cliente como o
+acesso vai funcionar. Não pode receber dado real assim.
+
+Para trocar a credencial de demonstração, gere o novo hash e substitua a
+constante `ESPERADO` em `assets/js/entrada.js`:
+
+```bash
+python3 -c "import hashlib,sys; print(hashlib.sha256(sys.argv[1].encode()).hexdigest())" 'usuario:senha'
+```
+
+O usuário é comparado em minúsculas, sem espaços nas pontas.
+
+A autenticação de verdade precisa acontecer antes de o arquivo sair do
+servidor. Hoje qualquer pessoa que digite `/admin` já baixou o HTML inteiro
+antes de a tela de login aparecer. O `noindex` tira do Google, mas não
 protege: quem souber o endereço entra.
 
 O formulário coleta **dado pessoal sensível** na acepção do art. 5º, II da LGPD:

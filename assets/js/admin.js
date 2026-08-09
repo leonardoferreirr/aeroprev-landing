@@ -486,5 +486,11 @@
     if (ev.key === 'Escape' && lateral.classList.contains('e-aberta')) fechaMenu();
   });
 
+  var sair = document.getElementById('sair');
+  if (sair) sair.addEventListener('click', function () {
+    try { sessionStorage.removeItem('aeroprev-painel-sessao'); } catch (e) {}
+    location.replace('login');
+  });
+
   daHash();
 })();

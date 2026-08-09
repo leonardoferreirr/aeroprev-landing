@@ -17,6 +17,7 @@ PAGINAS = {
     'privacidade.html': 'site.css',
     'termos.html': 'site.css',
     'admin.html': 'admin.css',
+    'login.html': 'admin.css',
 }
 
 

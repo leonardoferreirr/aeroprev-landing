@@ -89,11 +89,27 @@ a{color:inherit}
 .menu a svg{width:18px;height:18px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .menu a:hover{background:var(--linha-fraca);color:var(--tinta)}
 .menu a.e-ativo{background:var(--vinho-leve);color:var(--vinho);font-weight:600}
+/* item com linha de apoio: o svg alinha pelo titulo, nao pelo bloco todo */
+.menu a:has(.rot em){align-items:flex-start}
+.menu a:has(.rot em) svg{margin-top:.12rem}
+.menu a .rot{min-width:0;flex:1}
+.menu a .rot em{
+  display:block;font-style:normal;font-weight:400;font-size:.735rem;line-height:1.35;
+  color:var(--tinta-fraca);margin-top:.05rem;
+}
+.menu a.e-ativo .rot em{color:var(--vinho);opacity:.72}
 .menu a .marcador{
   margin-left:auto;background:var(--vinho);color:#fff;border-radius:999px;
   font-size:.68rem;font-weight:700;padding:.05rem .42rem;min-width:20px;text-align:center;
 }
 .menu a.e-ativo .marcador{background:var(--vinho)}
+/* fase seguinte: visivel no menu, mas sem prometer que ja funciona */
+.menu a .depois{
+  margin-left:auto;flex-shrink:0;align-self:center;
+  background:var(--linha-fraca);color:var(--tinta-fraca);border-radius:999px;
+  font-size:.62rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  padding:.1rem .45rem;
+}
 .usuario{
   border-top:1px solid var(--linha-fraca);padding:.9rem 1.1rem;
   display:flex;align-items:center;gap:.7rem;
@@ -204,6 +220,8 @@ a{color:inherit}
 }
 .bloco-cab h2{font-family:var(--serif);font-size:1.06rem;font-weight:500;letter-spacing:-.005em}
 .bloco-cab .acao{margin-left:auto;font-size:.8rem;color:var(--vinho);text-decoration:none;font-weight:600}
+/* alvo de toque de 24px sem mexer no visual do link */
+a.acao{display:inline-flex;align-items:center;min-height:24px}
 .bloco-cab .acao:hover{text-decoration:underline}
 .bloco-corpo{padding:1.25rem}
 
@@ -364,11 +382,112 @@ tbody tr:last-child td{border-bottom:0}
 .bt-cheio:hover{background:var(--vinho-esc);border-color:var(--vinho-esc);color:#fff}
 .ficha-pe .obs{margin-left:auto;font-size:.75rem;color:var(--tinta-fraca)}
 
+/* ---------- area de trabalho: escolher o caso e anexar ---------- */
+.trabalho{display:grid;grid-template-columns:288px 1fr;align-items:start}
+.coluna-casos{
+  border-right:1px solid var(--linha);max-height:620px;overflow-y:auto;
+  padding:.6rem;display:flex;flex-direction:column;gap:.2rem;
+}
+.caso-item{
+  display:flex;align-items:center;gap:.65rem;width:100%;text-align:left;
+  padding:.55rem .6rem;border:1px solid transparent;border-radius:8px;
+  background:none;cursor:pointer;transition:background-color .16s var(--curva),border-color .16s var(--curva);
+}
+.caso-item:hover{background:var(--linha-fraca)}
+.caso-item.e-ativo{background:var(--vinho-leve);border-color:var(--vinho-borda)}
+.caso-item .avatar{width:32px;height:32px;font-size:.7rem}
+.caso-txt{min-width:0;flex:1}
+.caso-txt strong{
+  display:block;font-size:.83rem;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.caso-txt span{
+  display:block;font-size:.72rem;color:var(--tinta-fraca);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.caso-item.e-ativo .caso-txt strong{color:var(--vinho)}
+.caso-n{
+  flex-shrink:0;background:var(--vinho);color:#fff;border-radius:999px;
+  font-size:.66rem;font-weight:700;padding:.05rem .4rem;min-width:19px;text-align:center;
+}
+.caso-cab{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;
+  padding-bottom:.9rem;margin-bottom:.9rem;border-bottom:1px solid var(--linha-fraca);
+}
+.caso-cab h3{font-family:var(--serif);font-size:1.2rem;font-weight:500;margin:.15rem 0 .1rem}
+.caso-cab p{font-size:.82rem;color:var(--tinta-media)}
+
+/* ---------- anexar ---------- */
+.envio{
+  display:flex;align-items:center;gap:.85rem;width:100%;
+  padding:1rem 1.1rem;margin:.9rem 0 1rem;cursor:pointer;
+  border:1.5px dashed var(--linha);border-radius:var(--raio);background:var(--fundo);
+  transition:border-color .18s var(--curva),background-color .18s var(--curva);
+}
+.envio:hover,.envio.e-sobre{border-color:var(--vinho);background:var(--vinho-leve)}
+.envio.e-ocupada{opacity:.6;pointer-events:none}
+.envio-icone{
+  width:38px;height:38px;border-radius:9px;flex-shrink:0;display:grid;place-items:center;
+  background:var(--papel);border:1px solid var(--linha);color:var(--vinho);
+}
+.envio-icone svg{width:19px;height:19px}
+.envio strong{display:block;font-size:.87rem;font-weight:600}
+.envio span span,.envio>span:last-child span{font-size:.76rem;color:var(--tinta-fraca)}
+.envio-aviso{
+  margin:-.4rem 0 .9rem;font-size:.78rem;color:var(--vinho);
+  background:var(--vinho-leve);border:1px solid var(--vinho-borda);
+  border-radius:8px;padding:.5rem .7rem;
+}
+.arquivo .remover{
+  flex-shrink:0;padding:.3rem .7rem;border:1px solid transparent;border-radius:6px;
+  background:none;font-size:.76rem;color:var(--tinta-fraca);cursor:pointer;
+}
+.arquivo .remover:hover{border-color:var(--vinho);color:var(--vinho)}
+
+/* ---------- relatorios ---------- */
+.rel-linha{
+  display:flex;align-items:center;gap:.8rem;padding:.7rem .2rem;
+  border-bottom:1px solid var(--linha-fraca);
+}
+.rel-linha:last-child{border-bottom:0}
+.rel-linha .avatar{width:34px;height:34px;font-size:.72rem}
+.rel-txt{min-width:0;flex:1}
+.rel-txt strong{display:block;font-size:.86rem;font-weight:600}
+.rel-txt span{
+  display:block;font-size:.75rem;color:var(--tinta-fraca);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.rel-bt{display:flex;gap:.45rem;flex-shrink:0}
+.rel-bt .bt{padding:.42rem .8rem;font-size:.78rem}
+
+/* ---------- proxima fase ---------- */
+.proxima{
+  border:1px dashed var(--linha);border-radius:var(--raio);
+  padding:1.4rem 1.5rem;background:var(--fundo);
+}
+.proxima p{font-size:.9rem;color:var(--tinta-media);max-width:62ch}
+.proxima .nota{margin-top:.7rem}
+
 /* ---------- responsivo ---------- */
 .abre-menu{display:none}
 @media(max-width:1080px){
   .metricas{grid-template-columns:1fr 1fr}
   .duo{grid-template-columns:1fr}
+  /* a coluna de casos vira uma faixa acima da area de anexos */
+  .trabalho{grid-template-columns:1fr}
+  .coluna-casos{
+    border-right:0;border-bottom:1px solid var(--linha);
+    max-height:none;flex-direction:row;overflow-x:auto;gap:.4rem;
+  }
+  .caso-item{width:auto;flex:0 0 auto;max-width:250px}
+  .caso-txt strong,.caso-txt span{max-width:150px}
+}
+@media(max-width:620px){
+  .rel-linha{flex-wrap:wrap}
+  /* largura cheia sem margem lateral: width:100% + margin estouraria o container */
+  .rel-bt{width:100%;margin-left:0;margin-top:.2rem}
+  .rel-bt .bt{flex:1}
+  .caso-cab{flex-direction:column;gap:.5rem}
 }
 @media(max-width:860px){
   .app{grid-template-columns:1fr}

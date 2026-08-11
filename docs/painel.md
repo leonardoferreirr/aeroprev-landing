@@ -2,12 +2,37 @@
 
 ## O que está pronto
 
-`/admin` é a **interface** do painel: lista de pré-análises, ficha completa com
-todas as respostas das 11 etapas, documentos anexados, busca, filtro por
-situação e contadores. Roda em qualquer navegador, sem instalar nada.
+`/admin` é a **interface** do painel, com o menu que o escritório pediu:
 
-Os dados na tela são **fictícios** e vêm de `assets/js/admin-dados.js`. A faixa
-escura no topo diz isso, e ela só sai quando houver dados de verdade.
+- **Dashboard** — métricas, roscas por situação e por objetivo, últimos cadastros.
+- **Gestão de casos**
+  - **Casos** — todos os cadastros, filtro por situação, busca; abre a ficha
+    completa das 11 etapas.
+  - **Análise previdenciária** — escolhe um cadastro e anexa a análise do CNIS
+    e documentos de apoio.
+  - **Cálculos** — mesma mecânica, para a planilha ou o PDF de cálculos.
+  - **Relatórios** — gera, por cadastro, um relatório **simplificado** ou
+    **completo**, que abre pronto para imprimir ou salvar em PDF.
+- **Inteligência previdenciária** (Acervo jurisprudencial, Base jurídica, Análise
+  inteligente) — no menu, marcadas **em breve**, para a segunda fase.
+- **Escritório** — Equipe e Ajustes.
+
+Os dados de cadastro na tela são **fictícios** e vêm de `assets/js/admin-dados.js`.
+A faixa escura no topo diz isso, e ela só sai quando houver dados de verdade.
+
+### Anexos ficam no navegador (IndexedDB)
+
+Os arquivos que o escritório anexa em Análise e Cálculos são gravados no próprio
+navegador, via `assets/js/admin-arquivos.js`. Continuam lá depois de fechar a aba
+e podem ser reabertos ou baixados. **Não é servidor:** os arquivos ficam na
+máquina de quem anexou e não são vistos por outra pessoa do escritório, nem
+entram no relatório de quem abrir o painel em outro computador. É o passo
+possível hoje, num site estático; a versão compartilhada é o item 3 abaixo.
+
+**Armadilha resolvida:** o Safari/WebKit (o navegador do iPhone) **aborta** a
+gravação de um objeto `File` no IndexedDB. Por isso guardamos os **bytes**
+(`ArrayBuffer`) mais os metadados e remontamos o arquivo na leitura. Testado e
+funcionando em WebKit e Chromium; não voltar a gravar `File` direto.
 
 ## O que falta para receber de verdade
 
@@ -28,8 +53,11 @@ esconde alguma coisa.
 Serve enquanto o painel só tem dados fictícios, e mostra ao cliente como o
 acesso vai funcionar. Não pode receber dado real assim.
 
-Para trocar a credencial de demonstração, gere o novo hash e substitua a
-constante `ESPERADO` em `assets/js/entrada.js`:
+Credencial de demonstração: **usuário `sartori`, senha `aeroprev2026`**.
+Fica anotada aqui de propósito, porque não é segurança de verdade.
+
+Para trocar, gere o novo hash e substitua a constante `ESPERADO` em
+`assets/js/entrada.js`:
 
 ```bash
 python3 -c "import hashlib,sys; print(hashlib.sha256(sys.argv[1].encode()).hexdigest())" 'usuario:senha'

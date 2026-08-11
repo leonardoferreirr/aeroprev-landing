@@ -9,8 +9,10 @@
   'use strict';
 
   var CHAVE = 'aeroprev-painel-sessao';
-  // sha-256 de "usuario:senha"
-  var ESPERADO = '0cf0ba8b533cd673fdce3d5b6b3311a50e68e17c57a95e213ad1e7e62a55d9d9';
+  // sha-256 de "usuario:senha". Credencial de demonstração: sartori / aeroprev2026
+  // (registrada em docs/painel.md). Como não é segurança de verdade, fica anotada
+  // de propósito; a proteção real vem com o backend.
+  var ESPERADO = 'd0f565eaf4076b02ef5d58c5a4862f28534eebfa5317030c1acfb6d23e348950';
 
   var form = document.getElementById('formEntrada');
   var erro = document.getElementById('erro');

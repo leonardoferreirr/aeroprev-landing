@@ -53,7 +53,7 @@ esconde alguma coisa.
 Serve enquanto o painel só tem dados fictícios, e mostra ao cliente como o
 acesso vai funcionar. Não pode receber dado real assim.
 
-Credencial de demonstração: **usuário `sartori`, senha `aeroprev2026`**.
+Credencial de demonstração: **usuário `benicio`, senha `admin123`**.
 Fica anotada aqui de propósito, porque não é segurança de verdade.
 
 Para trocar, gere o novo hash e substitua a constante `ESPERADO` em

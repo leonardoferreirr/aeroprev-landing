@@ -7,7 +7,7 @@ so que minificado. Rode antes de cada deploy:
 
     python3 build.py
 """
-import os, re, shutil, subprocess, sys
+import os, re, shutil, subprocess, sys, hashlib
 
 RAIZ = os.getcwd() if '--somente-dist' in sys.argv else os.path.dirname(os.path.abspath(__file__))
 DIST = os.path.join(RAIZ, 'dist')
@@ -56,15 +56,21 @@ def build():
         if os.path.isdir(origem):
             shutil.copytree(origem, os.path.join(DIST, sub))
 
-    # javascript minificado
+    # javascript minificado. Os arquivos em /assets sao servidos com cache
+    # immutable de 1 ano; como o nome nao muda, uma correcao nunca chegaria a
+    # quem ja abriu a pagina. Por isso carimbamos cada JS com um hash do
+    # conteudo (?v=...) e reescrevemos as referencias no HTML: muda o arquivo,
+    # muda a URL, o navegador busca de novo.
     os.makedirs(os.path.join(DIST, 'assets/js'), exist_ok=True)
     total_js = 0
+    versao_js = {}
     for arq in sorted(os.listdir(os.path.join(RAIZ, 'assets/js'))):
         if not arq.endswith('.js'):
             continue
         antes = os.path.getsize(os.path.join(RAIZ, 'assets/js', arq))
-        depois = minifica_js(os.path.join(RAIZ, 'assets/js', arq),
-                             os.path.join(DIST, 'assets/js', arq))
+        destino = os.path.join(DIST, 'assets/js', arq)
+        depois = minifica_js(os.path.join(RAIZ, 'assets/js', arq), destino)
+        versao_js[arq] = hashlib.md5(open(destino, 'rb').read()).hexdigest()[:8]
         total_js += depois
         print(f'  js  {arq:<18} {antes/1024:6.1f} -> {depois/1024:6.1f} KB')
 
@@ -97,6 +103,13 @@ def build():
         html = html.replace(
             '<link rel="stylesheet" href="assets/css/' + folha + '">',
             '<style>' + folhas[folha] + '</style>')
+        # carimba cada <script src="assets/js/X.js"> com o hash do conteudo,
+        # pra furar o cache immutable quando o arquivo muda
+        def versiona(m):
+            nome = m.group(1)
+            v = versao_js.get(nome)
+            return 'assets/js/' + nome + ('?v=' + v if v else '')
+        html = re.sub(r'assets/js/([\w.-]+\.js)', versiona, html)
         # comentarios de secao nao precisam ir para producao
         html = re.sub(r'\n?<!--\s*=+.*?=+\s*-->', '', html, flags=re.S)
         html = re.sub(r'\n{3,}', '\n\n', html)

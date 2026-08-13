@@ -4,6 +4,13 @@
 (function () {
   'use strict';
 
+  /* Recepção das pré-análises no Supabase. A chave abaixo é publishable
+     (pública por projeto): quem protege os dados são as políticas RLS do
+     banco, não o sigilo da chave. A chave secreta nunca entra no site. */
+  var SUPABASE_URL = 'https://loqnkkhmhupwzjltvocb.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_lEH8Z0JSzkScjqL-fqfONg_UqWrFQkG';
+  var SUPABASE_BUCKET = 'documentos';
+
   /* =======================================================
      1. ESTRUTURA DAS ETAPAS
      ======================================================= */
@@ -1025,15 +1032,9 @@
       if (h2) { h2.setAttribute('tabindex', '-1'); h2.focus({ preventScroll: true }); }
     }
 
-    // ponto de integracao com o backoffice: defina window.AEROPREV_ENDPOINT
-    if (window.AEROPREV_ENDPOINT) {
-      var fd = new FormData();
-      fd.append('dados', JSON.stringify(payload));
-      Object.keys(arquivos).forEach(function (k) {
-        (arquivos[k] || []).forEach(function (f) { fd.append(k + '[]', f, f.name); });
-      });
-      fetch(window.AEROPREV_ENDPOINT, { method: 'POST', body: fd })
-        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r; })
+    // Recepção no Supabase: sobe os anexos e grava a linha da pré-análise.
+    if (SUPABASE_URL && SUPABASE_KEY) {
+      enviaSupabase(payload, prot)
         .then(conclui)
         .catch(function (err) {
           peSeguir.disabled = false;
@@ -1041,9 +1042,73 @@
           console.error('[AeroPrev] falha no envio:', err);
         });
     } else {
-      console.info('[AeroPrev] AEROPREV_ENDPOINT não definido. Payload que seria enviado:', payload, arquivos);
+      console.info('[AeroPrev] Supabase não configurado. Payload que seria enviado:', payload, arquivos);
       setTimeout(conclui, 600);
     }
+  }
+
+  /* Envia a pré-análise ao Supabase. Os arquivos sobem direto para o Storage,
+     do navegador, sem passar por servidor (é o que contorna o limite de corpo
+     das funções serverless e aguenta os anexos de 15 MB). Só depois que todos
+     entram é que a linha é gravada na tabela, com a lista de caminhos. Assim,
+     se a linha existe, os arquivos dela já estão no Storage. */
+  function enviaSupabase(payload, prot) {
+    var base = SUPABASE_URL.replace(/\/+$/, '');
+    var auth = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY };
+    var id = (window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : prot + '-' + Date.now().toString(36);
+
+    function encPath(p) { return p.split('/').map(encodeURIComponent).join('/'); }
+
+    var subidas = [];
+    Object.keys(arquivos).forEach(function (campo) {
+      (arquivos[campo] || []).forEach(function (f, i) {
+        var limpo = (f.name || 'arquivo').replace(/[^\w.\-]+/g, '_');
+        var caminho = id + '/' + campo + '/' + (i + 1) + '-' + limpo;
+        subidas.push(
+          fetch(base + '/storage/v1/object/' + SUPABASE_BUCKET + '/' + encPath(caminho), {
+            method: 'POST',
+            headers: Object.assign({
+              'Content-Type': f.type || 'application/octet-stream'
+            }, auth),
+            body: f
+          }).then(function (r) {
+            if (!r.ok) return r.text().then(function (t) {
+              throw new Error('upload ' + r.status + ' ' + t);
+            });
+            return { campo: campo, caminho: SUPABASE_BUCKET + '/' + caminho,
+                     nome: f.name, tamanho: f.size, tipo: f.type };
+          })
+        );
+      });
+    });
+
+    return Promise.all(subidas).then(function (anexos) {
+      var r = (payload && payload.respostas) || {};
+      var linha = {
+        id: id,
+        protocolo: prot,
+        nome: r.nome || null,
+        email: r.email || null,
+        telefone: r.telefone || null,
+        dados: payload,
+        arquivos: anexos
+      };
+      return fetch(base + '/rest/v1/submissoes', {
+        method: 'POST',
+        headers: Object.assign({
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal'
+        }, auth),
+        body: JSON.stringify(linha)
+      }).then(function (resp) {
+        if (!resp.ok) return resp.text().then(function (t) {
+          throw new Error('insert ' + resp.status + ' ' + t);
+        });
+        return true;
+      });
+    });
   }
 
   /* =======================================================

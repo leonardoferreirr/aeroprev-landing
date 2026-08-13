@@ -10,23 +10,20 @@
   <link rel="preload" href="assets/fonts/instrument-sans-normal-400-700.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/css/admin.css">
   <script>
-    /* antes de qualquer pintura, senao o painel pisca na tela de quem nao
-       entrou. Isto e fluxo, nao seguranca: ver assets/js/entrada.js */
+    /* antes de qualquer pintura, para o painel nao piscar para quem nao entrou.
+       So confere se ha sessao salva; a validacao real (token no servidor)
+       acontece em admin.js ao buscar os dados. Ver assets/js/supabase.js */
     (function () {
       try {
-        if (!sessionStorage.getItem('aeroprev-painel-sessao')) {
+        var s = JSON.parse(localStorage.getItem('aeroprev-sb-sessao') || 'null');
+        if (!s || !s.access_token) {
           location.replace('login?de=' + encodeURIComponent(location.pathname));
         }
-      } catch (e) {}
+      } catch (e) { location.replace('login'); }
     })();
   </script>
 </head>
 <body>
-
-  <div class="demo" role="status">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
-    <span><b>Demonstração.</b> As pré-análises abaixo são fictícias. O painel ainda não está ligado a um banco de dados, então nada aqui é gravado nem enviado.</span>
-  </div>
 
   <div class="fundo-menu" id="fundoMenu"></div>
 
@@ -93,10 +90,10 @@
       </nav>
 
       <div class="usuario">
-        <span class="avatar">BT</span>
+        <span class="avatar" id="euAvatar">SW</span>
         <div>
-          <strong>Benício Trentini</strong>
-          <span>Sartori &amp; Wöhlke</span>
+          <strong id="euNome">Escritório</strong>
+          <span id="euEmail">Sartori &amp; Wöhlke</span>
         </div>
         <button class="sair" id="sair" type="button" aria-label="Sair do painel" title="Sair">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 17l5-5-5-5M20 12H9M12 20H6a2 2 0 01-2-2V6a2 2 0 012-2h6"/></svg>
@@ -143,11 +140,12 @@
     <div class="ficha-pe">
       <button class="bt bt-cheio" type="button" data-acao="analise">Marcar em análise</button>
       <button class="bt" type="button" data-acao="documentos">Pedir documentos</button>
-      <span class="obs">Ações desligadas na demonstração</span>
+      <span class="obs">A situação escolhida fica salva no caso</span>
     </div>
   </aside>
 
-  <script src="assets/js/admin-dados.js" defer></script>
+  <script src="assets/js/supabase.js" defer></script>
+  <script src="assets/js/admin-fonte.js" defer></script>
   <script src="assets/js/admin-arquivos.js" defer></script>
   <script src="assets/js/admin.js" defer></script>
 </body>

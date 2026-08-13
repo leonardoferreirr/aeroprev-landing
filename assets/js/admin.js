@@ -65,7 +65,8 @@
   }
   function dataCurta(iso) {
     if (!iso) return '';
-    var p = iso.split('-');
+    var p = String(iso).split('-');
+    if (p.length < 2 || isNaN(+p[0])) return iso; // texto livre, ex.: "Atual"
     return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : p[1] + '/' + p[0];
   }
   function etiqueta(status) {
@@ -681,6 +682,23 @@
   var fundoFicha = document.getElementById('fundoFicha');
   var fichaCorpo = document.getElementById('fichaCorpo');
   var ultimoFoco = null;
+  var fichaAtual = null;
+
+  /* abre o anexo do cliente por um link temporário do bucket privado. A janela
+     é aberta já no clique (não depois do fetch), senão o navegador bloqueia. */
+  function baixaDoc(bt, d) {
+    if (!window.AeroPrevSB || !d.caminho) return;
+    var w = window.open('', '_blank');
+    var rotulo = bt.textContent;
+    bt.disabled = true; bt.textContent = 'Abrindo…';
+    AeroPrevSB.urlAssinada(d.caminho).then(function (url) {
+      if (w) w.location = url; else window.location = url;
+    }).catch(function (e) {
+      if (w) w.close();
+      alert('Não foi possível abrir o arquivo agora.');
+      console.error('[AeroPrev]', e);
+    }).then(function () { bt.disabled = false; bt.textContent = rotulo; });
+  }
 
   function par(rot, valor, largo) {
     if (!valor) return null;
@@ -696,6 +714,7 @@
 
   function abreFicha(r) {
     ultimoFoco = document.activeElement;
+    fichaAtual = r;
     document.getElementById('fichaProto').textContent = r.proto;
     document.getElementById('fichaNome').textContent = r.nome;
     document.getElementById('fichaSub').textContent =
@@ -758,10 +777,13 @@
 
     var docs = el('div');
     r.docs.forEach(function (d) {
+      var bt = el('button', { class: 'baixar', type: 'button', txt: 'Baixar' });
+      if (d.caminho) bt.addEventListener('click', function () { baixaDoc(bt, d); });
+      else { bt.disabled = true; bt.title = 'Arquivo indisponível'; }
       docs.appendChild(el('div', { class: 'arquivo' }, [
         el('span', { class: 'tipo', txt: d.tipo }),
         el('div', {}, [el('strong', { txt: d.nome }), el('span', { txt: peso(d.peso) })]),
-        el('button', { class: 'baixar', type: 'button', txt: 'Baixar' })
+        bt
       ]));
     });
     fichaCorpo.appendChild(secao('Documentos · ' + r.docs.length, [docs]));
@@ -793,11 +815,27 @@
     if (ev.key === 'Escape' && ficha.classList.contains('e-aberta')) fechaFicha();
   });
   Array.prototype.forEach.call(document.querySelectorAll('.ficha-pe [data-acao]'), function (b) {
+    var rotulo = b.textContent;
     b.addEventListener('click', function () {
-      b.textContent = 'Indisponível na demonstração';
-      setTimeout(function () {
-        b.textContent = b.dataset.acao === 'analise' ? 'Marcar em análise' : 'Pedir documentos';
-      }, 1600);
+      if (!fichaAtual || !window.AeroPrevSB) return;
+      var novo = b.dataset.acao === 'analise' ? 'analise' : 'documentos';
+      b.disabled = true; b.textContent = 'Salvando…';
+      AeroPrevSB.api('/rest/v1/submissoes?id=eq.' + encodeURIComponent(fichaAtual._id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ status: novo })
+      }).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        fichaAtual.status = novo;
+        b.textContent = 'Feito';
+        // recarrega a lista por baixo para a etiqueta e as contagens baterem
+        return AEROPREV_FONTE.carregar().then(function (regs) { DEMO.registros = regs; desenha(); });
+      }).catch(function (e) {
+        alert('Não foi possível salvar a mudança agora.');
+        console.error('[AeroPrev]', e);
+      }).then(function () {
+        setTimeout(function () { b.disabled = false; b.textContent = rotulo; }, 1200);
+      });
     });
   });
 
@@ -864,11 +902,37 @@
 
   var sair = document.getElementById('sair');
   if (sair) sair.addEventListener('click', function () {
-    try { sessionStorage.removeItem('aeroprev-painel-sessao'); } catch (e) {}
+    if (window.AeroPrevSB) AeroPrevSB.sair();
     location.replace('login');
   });
 
-  // desenha já com o que estiver no banco do navegador, para a contagem de
-  // anexos não aparecer zerada e pular para o número certo um instante depois
-  carregaAnexos().then(daHash, daHash);
+  // identifica quem entrou na barra lateral
+  var eu = window.AeroPrevSB && AeroPrevSB.email();
+  if (eu) {
+    var elEmail = document.getElementById('euEmail');
+    var elNome = document.getElementById('euNome');
+    var elAvatar = document.getElementById('euAvatar');
+    if (elEmail) elEmail.textContent = eu;
+    if (elNome) elNome.textContent = eu.split('@')[0];
+    if (elAvatar) elAvatar.textContent = eu.slice(0, 2).toUpperCase();
+  }
+
+  // carrega as submissões reais, depois os anexos do escritório, e desenha
+  function inicia() {
+    conteudo.innerHTML = '<div class="vazio">Carregando as pré-análises…</div>';
+    return AEROPREV_FONTE.carregar().then(function (regs) {
+      DEMO.registros = regs;
+      return carregaAnexos();
+    });
+  }
+  inicia().then(daHash, function (err) {
+    if (err && err.auth) {
+      if (window.AeroPrevSB) AeroPrevSB.sair();
+      location.replace('login');
+      return;
+    }
+    console.error('[AeroPrev] falha ao carregar os dados:', err);
+    conteudo.innerHTML = '';
+    carregaAnexos().then(daHash, daHash);
+  });
 })();

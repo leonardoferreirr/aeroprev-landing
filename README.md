@@ -1,7 +1,7 @@
 # AeroPrev
 
 Site institucional da AeroPrev, serviço de pré-análise previdenciária para aeronautas e
-aeroviários mantido pelo escritório Sartori & Wöhlke Advocacia.
+aeroviários mantido pelo escritório Sartoti & Wöhlke Advocacia.
 
 HTML, CSS e JavaScript puros. Sem framework, sem dependência de runtime.
 

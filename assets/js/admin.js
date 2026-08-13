@@ -602,7 +602,7 @@
       '<p>Protocolo ' + esc(r.proto) + ' · recebida em ' + esc(dataHora(r.recebido)) +
       ' · situação: ' + esc(ROT[r.status] || r.status) + '</p></header>' +
       partes.join('') +
-      '<footer>AeroPrev · Sartori &amp; Wöhlke · gerado em ' + esc(dataHora(new Date().toISOString())) +
+      '<footer>AeroPrev · Sartoti &amp; Wöhlke · gerado em ' + esc(dataHora(new Date().toISOString())) +
       '<br>Documento de uso interno. Os dados desta demonstração são fictícios.</footer>' +
       '</body></html>';
 

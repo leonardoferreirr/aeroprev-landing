@@ -467,7 +467,7 @@
     var corpo = el('div', { class: 'bloco-corpo' });
     corpo.appendChild(el('p', {
       class: 'nota',
-      txt: 'O relatório abre em uma janela pronta para imprimir. Na janela de impressão, escolha "Salvar em PDF" para guardar o arquivo.'
+      txt: 'O relatório baixa como um PDF único. No completo, todos os documentos do caso vão dentro do mesmo arquivo: os que o solicitante enviou e os que o escritório anexou.'
     }));
 
     if (!lista.length) {
@@ -475,6 +475,7 @@
     }
 
     lista.forEach(function (r) {
+      var quantos = anexosParaPdf(r).length;
       var linha = el('div', { class: 'rel-linha' }, [
         el('span', { class: 'avatar', txt: r.iniciais }),
         el('div', { class: 'rel-txt' }, [
@@ -483,12 +484,15 @@
         ]),
         el('div', { class: 'rel-bt' }, [
           el('button', { class: 'bt', type: 'button', txt: 'Simplificado' }),
-          el('button', { class: 'bt bt-cheio', type: 'button', txt: 'Completo' })
+          el('button', {
+            class: 'bt bt-cheio', type: 'button',
+            txt: quantos ? 'Completo · ' + quantos + (quantos === 1 ? ' anexo' : ' anexos') : 'Completo'
+          })
         ])
       ]);
       var bts = linha.querySelectorAll('.rel-bt button');
-      bts[0].addEventListener('click', function () { geraRelatorio(r, false); });
-      bts[1].addEventListener('click', function () { geraRelatorio(r, true); });
+      bts[0].addEventListener('click', function () { geraRelatorio(r, false, bts[0], bts[1]); });
+      bts[1].addEventListener('click', function () { geraRelatorio(r, true, bts[1], bts[0]); });
       corpo.appendChild(linha);
     });
 
@@ -501,119 +505,71 @@
     ])];
   }
 
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+  /* Junta, na ordem que faz sentido ler, tudo que deve entrar no PDF completo:
+     primeiro o que o solicitante enviou, depois o que o escritorio anexou. */
+  function anexosParaPdf(r) {
+    var lista = [];
+    (r.docs || []).forEach(function (d) {
+      lista.push({
+        origem: 'solicitante', rotulo: d.grupo || 'Documento enviado',
+        nome: d.nome, tipoRot: d.tipo, caminho: d.caminho
+      });
     });
+    var CAT = { analise: 'Análise previdenciária', calculos: 'Cálculos' };
+    anexosDe(r.proto).forEach(function (a) {
+      lista.push({
+        origem: 'escritorio', rotulo: CAT[a.categoria] || a.categoria,
+        nome: a.nome, tipoRot: a.tipo,
+        // registros gravados antes da migracao guardam Blob, nao ArrayBuffer
+        bytes: a.bytes || (a.blob ? a.blob.arrayBuffer() : null)
+      });
+    });
+    return lista;
   }
 
-  function geraRelatorio(r, completo) {
-    var linha = function (rot, val) {
-      return val ? '<tr><th>' + esc(rot) + '</th><td>' + esc(val) + '</td></tr>' : '';
-    };
-    var partes = [];
+  function geraRelatorio(r, completo, bt, outro) {
+    if (!window.AEROPREV_PDF) {
+      alert('O gerador de PDF nao carregou. Atualize a pagina e tente de novo.');
+      return;
+    }
+    var rotulo = bt ? bt.textContent : '';
+    var anexos = completo ? anexosParaPdf(r) : [];
 
-    partes.push('<h2>Identificação</h2><table class="pares">' +
-      linha('Nome', r.nome) + linha('CPF', r.cpf) +
-      linha('Nascimento', dataCurta(r.nascimento)) +
-      linha('Estado civil', r.estadoCivil) +
-      linha('Profissão atual', r.profissao) +
-      linha('E-mail', r.email) + linha('Telefone', r.telefone) +
-      linha('Cidade', r.cidade + ' · ' + r.estado) + '</table>');
-
-    partes.push('<h2>Objetivo</h2><p>' + esc(r.objetivo) + '</p>' +
-      (completo && r.objetivoDetalhe ? '<p class="obs">' + esc(r.objetivoDetalhe) + '</p>' : ''));
-
-    var vinc = r.vinculos.map(function (v) {
-      return '<tr><td><strong>' + esc(v.empresa) + '</strong></td><td>' + esc(v.funcao) +
-        '</td><td>' + esc(dataCurta(v.inicio) + ' a ' + dataCurta(v.fim)) + '</td></tr>';
-    }).join('');
-    partes.push('<h2>Trajetória na aviação</h2><table class="grade">' +
-      '<thead><tr><th>Empresa</th><th>Função</th><th>Período</th></tr></thead><tbody>' +
-      (vinc || '<tr><td colspan="3">Nenhum vínculo informado.</td></tr>') + '</tbody></table>');
-
-    if (completo) {
-      var outros = '';
-      if (r.militar.serviu) outros += linha('Serviço militar', dataCurta(r.militar.inicio) + ' a ' + dataCurta(r.militar.fim));
-      if (r.outras.length) outros += linha('Outros setores', r.outras.join(', '));
-      if (r.beneficios.length) outros += linha('Benefícios', r.beneficios.join(', '));
-      if (r.procInss.tem) outros += linha('Processo contra o INSS', r.procInss.num + ' · ' + r.procInss.sit);
-      if (r.procTrab.tem) outros += linha('Processo trabalhista', r.procTrab.num + ' · ' + r.procTrab.sit);
-      if (outros) partes.push('<h2>Militar, benefícios e processos</h2><table class="pares">' + outros + '</table>');
-
-      var sn = DEMO.situacoes.map(function (s) {
-        var sim = r.situacoes[s[0]];
-        return '<tr class="' + (sim ? 'sim' : '') + '"><td>' + esc(s[1]) + '</td><td>' + (sim ? 'SIM' : 'não') + '</td></tr>';
-      }).join('');
-      var qtos = DEMO.situacoes.filter(function (s) { return r.situacoes[s[0]]; }).length;
-      partes.push('<h2>Outras situações <small>' + qtos + ' de ' + DEMO.situacoes.length + ' marcadas</small></h2>' +
-        '<table class="grade sn"><tbody>' + sn + '</tbody></table>');
+    function trava(t) {
+      if (!bt) return;
+      bt.disabled = true; bt.textContent = t;
+      if (outro) outro.disabled = true;
+    }
+    function solta() {
+      if (!bt) return;
+      bt.disabled = false; bt.textContent = rotulo;
+      if (outro) outro.disabled = false;
     }
 
-    var docs = r.docs.map(function (d) {
-      return '<tr><td>' + esc(d.grupo || '—') + '</td><td>' + esc(d.nome) + '</td><td>' + esc(d.tipo) + '</td><td>' + esc(peso(d.peso)) + '</td></tr>';
-    }).join('');
-    partes.push('<h2>Documentos enviados pelo solicitante <small>' + r.docs.length + '</small></h2>' +
-      '<table class="grade"><thead><tr><th>Documento</th><th>Arquivo</th><th>Tipo</th><th>Tamanho</th></tr></thead><tbody>' +
-      (docs || '<tr><td colspan="4">Nenhum documento enviado.</td></tr>') + '</tbody></table>');
+    trava(anexos.length ? 'Preparando…' : 'Gerando…');
 
-    var meus = anexosDe(r.proto);
-    if (meus.length) {
-      var CAT = { analise: 'Análise previdenciária', calculos: 'Cálculos' };
-      var linhasMeus = meus.map(function (a) {
-        return '<tr><td>' + esc(a.nome) + '</td><td>' + esc(CAT[a.categoria] || a.categoria) +
-          '</td><td>' + esc(dataHora(a.quando)) + '</td></tr>';
-      }).join('');
-      partes.push('<h2>Anexos do escritório <small>' + meus.length + '</small></h2>' +
-        '<table class="grade"><thead><tr><th>Arquivo</th><th>Seção</th><th>Anexado em</th></tr></thead><tbody>' +
-        linhasMeus + '</tbody></table>');
-    }
+    // o status vai no registro porque o modulo do PDF nao conhece os rotulos
+    var dados = Object.assign({}, r, { statusRot: ROT[r.status] || r.status });
 
-    if (completo && r.observacoes) {
-      partes.push('<h2>Observações do solicitante</h2><p class="obs">' + esc(r.observacoes) + '</p>');
-    }
-
-    var doc = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">' +
-      '<title>' + esc((completo ? 'Relatório completo' : 'Relatório simplificado') + ' · ' + r.nome) + '</title>' +
-      '<style>' +
-      '*{box-sizing:border-box}' +
-      'html{background:#fff}' +
-      'body{font:13px/1.55 "Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;color:#1A1112;background:#fff;margin:0 auto;padding:34px 38px;max-width:820px}' +
-      'header{border-bottom:2px solid #7A1B1D;padding-bottom:14px;margin-bottom:22px}' +
-      '.selo{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#8E7C79}' +
-      'h1{font-size:1.5rem;margin:.25rem 0 .1rem;color:#2C0A0B}' +
-      'header p{margin:0;color:#635250;font-size:.82rem}' +
-      'h2{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#7A1B1D;' +
-      'margin:24px 0 8px;padding-bottom:5px;border-bottom:1px solid #E7E1DE}' +
-      'h2 small{float:right;letter-spacing:0;text-transform:none;color:#8E7C79;font-weight:400}' +
-      'table{width:100%;border-collapse:collapse;font-size:.82rem}' +
-      '.pares th{width:34%;text-align:left;font-weight:500;color:#635250;padding:5px 10px 5px 0;vertical-align:top}' +
-      '.pares td{padding:5px 0;font-weight:600}' +
-      '.grade th{text-align:left;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;' +
-      'color:#8E7C79;border-bottom:1px solid #E7E1DE;padding:5px 8px 5px 0}' +
-      '.grade td{padding:5px 8px 5px 0;border-bottom:1px solid #F1ECEA;vertical-align:top}' +
-      '.sn td:last-child{width:70px;text-align:right;color:#8E7C79}' +
-      '.sn tr.sim td:last-child{color:#7A1B1D;font-weight:700}' +
-      'p{margin:.3rem 0}.obs{color:#635250;background:#F7F5F4;padding:10px 12px;border-radius:8px}' +
-      'footer{margin-top:30px;padding-top:12px;border-top:1px solid #E7E1DE;font-size:.7rem;color:#8E7C79}' +
-      '@media print{body{padding:0}h2{break-after:avoid}tr{break-inside:avoid}}' +
-      '</style></head><body>' +
-      '<header><span class="selo">' + (completo ? 'Relatório completo' : 'Relatório simplificado') + '</span>' +
-      '<h1>' + esc(r.nome) + '</h1>' +
-      '<p>Protocolo ' + esc(r.proto) + ' · recebida em ' + esc(dataHora(r.recebido)) +
-      ' · situação: ' + esc(ROT[r.status] || r.status) + '</p></header>' +
-      partes.join('') +
-      '<footer>AeroPrev · Sartoti &amp; Wöhlke · gerado em ' + esc(dataHora(new Date().toISOString())) +
-      '<br>Documento de uso interno. Os dados desta demonstração são fictícios.</footer>' +
-      '</body></html>';
-
-    var w = window.open('', '_blank');
-    if (!w) { alert('O navegador bloqueou a janela do relatório. Libere os pop-ups deste site e tente de novo.'); return; }
-    w.document.write(doc);
-    w.document.close();
-    w.focus();
-    // deixa a janela pintar antes de chamar a impressão, senão sai em branco no Safari
-    setTimeout(function () { try { w.print(); } catch (e) {} }, 400);
+    AEROPREV_PDF.montar(dados, completo, {
+      anexos: anexos,
+      aoProgresso: function (feito, total) {
+        if (total) trava('Juntando ' + Math.min(feito + 1, total) + ' de ' + total + '…');
+      }
+    }).then(function (saida) {
+      AEROPREV_PDF.baixa(saida.bytes, AEROPREV_PDF.nomeArquivo(r, completo));
+      solta();
+      if (saida.falhas.length) {
+        alert(saida.falhas.length + (saida.falhas.length === 1
+          ? ' anexo nao entrou no PDF:\n\n'
+          : ' anexos nao entraram no PDF:\n\n') +
+          saida.falhas.map(function (f) { return '· ' + f.nome + ' — ' + f.motivo; }).join('\n') +
+          '\n\nEles estao listados na ultima folha do arquivo e continuam disponiveis na tela do cadastro.');
+      }
+    }).catch(function (e) {
+      solta();
+      alert('Nao foi possivel gerar o relatorio.\n\n' + (e && e.message ? e.message : e));
+    });
   }
 
   function telaEmBreve(titulo, texto) {

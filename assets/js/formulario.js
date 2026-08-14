@@ -231,7 +231,7 @@
     {
       id: 'documentos', nome: 'Documentos',
       titulo: 'Seus documentos',
-      texto: 'Quatro documentos são obrigatórios para começar a análise, e estão marcados abaixo. O restante você envia se tiver em mãos: o que faltar pode ser obtido depois, junto à empresa ou ao INSS. Aceitamos PDF, imagem e arquivos do Word, até 15 MB por arquivo.',
+      texto: 'Quatro documentos são obrigatórios para começar a análise, e estão marcados abaixo. O restante você envia se tiver em mãos: o que faltar pode ser obtido depois, junto à empresa ou ao INSS. Aceitamos PDF e foto (JPG ou PNG), até 15 MB por arquivo. Se o seu arquivo for do Word, abra, escolha "Salvar como" e selecione PDF.',
       blocos: [
         { titulo: 'Documento de identificação', sub: 'RG, CNH ou CPF. Envie a frente e o verso, em foto legível ou PDF.', obrig: 1, campos: [{ t: 'upload', n: 'doc_identificacao', req: 1 }] },
         { titulo: 'Comprovante de residência', sub: 'Conta de luz, água, telefone ou internet, emitida nos últimos três meses.', obrig: 1, campos: [{ t: 'upload', n: 'doc_residencia', req: 1 }] },
@@ -587,8 +587,13 @@
   }
 
   /* ---------- arquivos ---------- */
-  var TIPOS_OK = ['application/pdf', 'image/jpeg', 'image/png', 'image/heic', 'image/webp',
-    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+  /* PDF e foto apenas. O painel junta o relatorio e todos os anexos num PDF
+     unico, e so estes tres formatos entram numa pagina de PDF: Word teria de
+     ser convertido, coisa que o navegador nao faz. HEIC ficou de fora de
+     proposito — quando o accept nao cita .heic, o iPhone converte a foto para
+     JPEG sozinho no momento de anexar. */
+  var TIPOS_OK = ['application/pdf', 'image/jpeg', 'image/png'];
+  var ACEITA = '.pdf,.jpg,.jpeg,.png';
   var PESO_MAX = 15 * 1024 * 1024;
 
   function listaArquivos(chave) {
@@ -615,8 +620,15 @@
     if (!arquivos[chave]) arquivos[chave] = [];
     var recusados = [];
     [].forEach.call(fileList, function (f) {
-      var extOk = /\.(pdf|jpe?g|png|heic|webp|docx?)$/i.test(f.name);
-      if (TIPOS_OK.indexOf(f.type) < 0 && !extOk) { recusados.push(f.name + ' (formato não aceito)'); return; }
+      var extOk = /\.(pdf|jpe?g|png)$/i.test(f.name);
+      if (TIPOS_OK.indexOf(f.type) < 0 && !extOk) {
+        // dizer o que fazer, nao so que deu errado: Word e o caso comum
+        var comoResolver = /\.docx?$/i.test(f.name)
+          ? ' (documento do Word: abra o arquivo, escolha "Salvar como" e selecione PDF)'
+          : ' (envie em PDF, JPG ou PNG)';
+        recusados.push(f.name + comoResolver);
+        return;
+      }
       if (f.size > PESO_MAX) { recusados.push(f.name + ' (acima de 15 MB)'); return; }
       var repetido = arquivos[chave].some(function (x) { return x.name === f.name && x.size === f.size; });
       if (!repetido) arquivos[chave].push(f);
@@ -632,12 +644,12 @@
     var caixa = el('div', { class: 'campo', 'data-campo': c.n });
     var entrada = el('input', {
       type: 'file', multiple: 'multiple', id: 'up-' + c.n,
-      accept: '.pdf,.jpg,.jpeg,.png,.heic,.webp,.doc,.docx'
+      accept: ACEITA
     });
     var zona = el('label', { class: 'solta', for: 'up-' + c.n }, [
       svgIcone(ICO.nuvem, '1.6'),
       el('strong', { txt: 'Escolher arquivos' }),
-      el('span', { txt: 'PDF, imagem ou Word. Até 15 MB por arquivo. Também dá para arrastar até aqui.' }),
+      el('span', { txt: 'PDF ou foto (JPG, PNG). Até 15 MB por arquivo. Também dá para arrastar até aqui.' }),
       entrada
     ]);
     var aviso = el('span', { class: 'aviso' });
@@ -680,7 +692,7 @@
       var idEntrada = 'm-' + c.n + '-' + chave;
       var entrada = el('input', {
         type: 'file', multiple: 'multiple', id: idEntrada,
-        accept: '.pdf,.jpg,.jpeg,.png,.heic,.webp,.doc,.docx'
+        accept: ACEITA
       });
       entrada.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0';
 

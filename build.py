@@ -69,7 +69,13 @@ def build():
             continue
         antes = os.path.getsize(os.path.join(RAIZ, 'assets/js', arq))
         destino = os.path.join(DIST, 'assets/js', arq)
-        depois = minifica_js(os.path.join(RAIZ, 'assets/js', arq), destino)
+        if arq.endswith('.min.js'):
+            # biblioteca de terceiro, ja vem minificada e com versao no nome:
+            # passar o terser nela so gasta tempo de build
+            shutil.copy2(os.path.join(RAIZ, 'assets/js', arq), destino)
+            depois = os.path.getsize(destino)
+        else:
+            depois = minifica_js(os.path.join(RAIZ, 'assets/js', arq), destino)
         versao_js[arq] = hashlib.md5(open(destino, 'rb').read()).hexdigest()[:8]
         total_js += depois
         print(f'  js  {arq:<18} {antes/1024:6.1f} -> {depois/1024:6.1f} KB')

@@ -224,7 +224,8 @@
       return {
         rot: o.length > 34 ? o.slice(0, 32) + '…' : o,
         cor: TONS[i % TONS.length],
-        valor: todos.filter(function (r) { return r.objetivo === o; }).length
+        // um caso pode marcar vários objetivos, então entra em cada fatia
+        valor: todos.filter(function (r) { return (r.objetivos || []).indexOf(o) > -1; }).length
       };
     }).filter(function (f) { return f.valor; });
 
@@ -278,7 +279,7 @@
         el('span', { class: 'tipo', txt: x.d.tipo }),
         el('div', {}, [
           el('strong', { txt: x.d.nome }),
-          el('span', { txt: x.r.nome + ' · ' + x.r.proto + ' · ' + peso(x.d.peso) })
+          el('span', { txt: (x.d.grupo ? x.d.grupo + ' · ' : '') + x.r.nome + ' · ' + x.r.proto + ' · ' + peso(x.d.peso) })
         ]),
         el('button', { class: 'baixar', type: 'button', txt: 'Abrir' })
       ]);
@@ -550,11 +551,11 @@
     }
 
     var docs = r.docs.map(function (d) {
-      return '<tr><td>' + esc(d.nome) + '</td><td>' + esc(d.tipo) + '</td><td>' + esc(peso(d.peso)) + '</td></tr>';
+      return '<tr><td>' + esc(d.grupo || '—') + '</td><td>' + esc(d.nome) + '</td><td>' + esc(d.tipo) + '</td><td>' + esc(peso(d.peso)) + '</td></tr>';
     }).join('');
     partes.push('<h2>Documentos enviados pelo solicitante <small>' + r.docs.length + '</small></h2>' +
-      '<table class="grade"><thead><tr><th>Arquivo</th><th>Tipo</th><th>Tamanho</th></tr></thead><tbody>' +
-      (docs || '<tr><td colspan="3">Nenhum documento enviado.</td></tr>') + '</tbody></table>');
+      '<table class="grade"><thead><tr><th>Documento</th><th>Arquivo</th><th>Tipo</th><th>Tamanho</th></tr></thead><tbody>' +
+      (docs || '<tr><td colspan="4">Nenhum documento enviado.</td></tr>') + '</tbody></table>');
 
     var meus = anexosDe(r.proto);
     if (meus.length) {
@@ -782,7 +783,7 @@
       else { bt.disabled = true; bt.title = 'Arquivo indisponível'; }
       docs.appendChild(el('div', { class: 'arquivo' }, [
         el('span', { class: 'tipo', txt: d.tipo }),
-        el('div', {}, [el('strong', { txt: d.nome }), el('span', { txt: peso(d.peso) })]),
+        el('div', {}, [el('strong', { txt: d.nome }), el('span', { txt: (d.grupo ? d.grupo + ' · ' : '') + peso(d.peso) })]),
         bt
       ]));
     });

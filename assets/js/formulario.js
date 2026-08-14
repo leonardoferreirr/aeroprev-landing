@@ -99,10 +99,10 @@
     {
       id: 'caso', nome: 'Objetivo',
       titulo: 'O que você procura',
-      texto: 'Escolha o objetivo principal do atendimento. Se houver mais de um, selecione o mais urgente e explique o restante no campo aberto.',
+      texto: 'Marque todos os objetivos que se aplicam ao seu caso. Se quiser, explique melhor no campo aberto logo abaixo.',
       blocos: [{
         campos: [{
-          t: 'radio', n: 'objetivo', r: 'Objetivo do atendimento', req: 1,
+          t: 'checks', n: 'objetivo', r: 'Objetivo do atendimento', req: 1,
           ops: [
             'Pré-análise de aposentadoria especial do aeronauta',
             'Revisão de aposentadoria',
@@ -231,10 +231,13 @@
     {
       id: 'documentos', nome: 'Documentos',
       titulo: 'Seus documentos',
-      texto: 'Envie o que tiver em mãos. O que faltar pode ser marcado como não possuo e obtido depois, junto à empresa ou ao INSS. Aceitamos PDF, imagem e arquivos do Word, até 15 MB por arquivo.',
+      texto: 'Quatro documentos são obrigatórios para começar a análise, e estão marcados abaixo. O restante você envia se tiver em mãos: o que faltar pode ser obtido depois, junto à empresa ou ao INSS. Aceitamos PDF, imagem e arquivos do Word, até 15 MB por arquivo.',
       blocos: [
-        { titulo: 'Documentos pessoais', sub: 'CPF, RG, CNH e comprovante de residência.', campos: [{ t: 'upload', n: 'doc_pessoais' }] },
-        { titulo: 'Documentos previdenciários', sub: 'CNIS atualizado, carteiras de trabalho e extrato do FGTS.', campos: [{ t: 'upload', n: 'doc_previdenciarios' }] },
+        { titulo: 'Documento de identificação', sub: 'RG, CNH ou CPF. Envie a frente e o verso, em foto legível ou PDF.', obrig: 1, campos: [{ t: 'upload', n: 'doc_identificacao', req: 1 }] },
+        { titulo: 'Comprovante de residência', sub: 'Conta de luz, água, telefone ou internet, emitida nos últimos três meses.', obrig: 1, campos: [{ t: 'upload', n: 'doc_residencia', req: 1 }] },
+        { titulo: 'CNIS', sub: 'Extrato do Cadastro Nacional de Informações Sociais. Baixe no aplicativo Meu INSS, em Extrato de contribuição (CNIS).', obrig: 1, campos: [{ t: 'upload', n: 'doc_cnis', req: 1 }] },
+        { titulo: 'Carteira de trabalho (CTPS)', sub: 'A página da frente, com foto e número. Se a sua for digital, envie o PDF completo do aplicativo Carteira de Trabalho.', obrig: 1, campos: [{ t: 'upload', n: 'doc_ctps', req: 1 }] },
+        { titulo: 'Extrato do FGTS', sub: 'Baixe no aplicativo FGTS, da Caixa Econômica Federal. Ajuda a comprovar vínculos antigos.', campos: [{ t: 'upload', n: 'doc_fgts' }] },
         { titulo: 'Documentos da atividade especial', sub: 'Marque o que você tem e envie os arquivos que já estiverem digitalizados.', campos: [{ t: 'matriz', n: 'doc_especiais', itens: DOCS_ESPECIAIS }] },
         { titulo: 'Documentos médicos', sub: 'Somente se houver afastamento, acidente ou doença ligada ao trabalho.', campos: [{ t: 'matriz', n: 'doc_medicos', itens: DOCS_MEDICOS }] }
       ]
@@ -620,7 +623,8 @@
     });
     if (aviso) {
       aviso.textContent = recusados.length ? 'Não foi possível anexar: ' + recusados.join(', ') : '';
-      aviso.style.display = recusados.length ? 'flex' : 'none';
+      // sem inline quando nao ha recusa, para o .campo.erro do CSS voltar a mandar
+      aviso.style.display = recusados.length ? 'flex' : '';
     }
   }
 
@@ -643,6 +647,7 @@
       aceita(c.n, entrada.files, aviso);
       lista.desenha();
       entrada.value = '';
+      if ((arquivos[c.n] || []).length) caixa.classList.remove('erro');
     });
     ['dragenter', 'dragover'].forEach(function (ev) {
       zona.addEventListener(ev, function (e) { e.preventDefault(); zona.classList.add('sobre'); });
@@ -755,7 +760,7 @@
       if (!n) return;
       n.classList.add('erro');
       var av = n.querySelector('.aviso');
-      if (av) av.textContent = f[1];
+      if (av) { av.textContent = f[1]; av.style.display = ''; }
     });
     if (falhas.length) {
       var primeiro = corpo.querySelector('.campo.erro');
@@ -784,6 +789,11 @@
           return;
         }
         if (c.t === 'vinculos') return;
+        // upload nao vive em `dados`, e sim em `arquivos`
+        if (c.t === 'upload') {
+          if (!(arquivos[c.n] || []).length) falhas.push([c.n, 'Anexe ao menos um arquivo']);
+          return;
+        }
         if (vazio) { falhas.push([c.n, 'Preencha este campo']); return; }
         if (c.t === 'cpf' && !validaCPF(v)) falhas.push([c.n, 'CPF inválido, confira os números']);
         if (c.t === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) falhas.push([c.n, 'E-mail inválido']);
@@ -886,7 +896,11 @@
 
     e.blocos.forEach(function (b) {
       var bloco = el('div', { class: 'wz-bloco' });
-      if (b.titulo) bloco.appendChild(el('h3', { txt: b.titulo }));
+      if (b.titulo) {
+        var h = el('h3', { txt: b.titulo });
+        if (b.obrig) h.appendChild(el('span', { class: 'selo-obrig', txt: 'obrigatório' }));
+        bloco.appendChild(h);
+      }
       if (b.sub) bloco.appendChild(el('p', { class: 'sub', txt: b.sub }));
 
       var fila = [];

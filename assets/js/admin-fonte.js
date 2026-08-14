@@ -60,6 +60,29 @@
     return 'ARQ';
   }
 
+  /* o caminho no Storage é documentos/<id>/<campo>/<arquivo>: o campo diz
+     a que documento o anexo pertence, e vira rótulo na lista do painel */
+  var GRUPOS = {
+    doc_identificacao: 'Identificação',
+    doc_residencia: 'Comprovante de residência',
+    doc_cnis: 'CNIS',
+    doc_ctps: 'CTPS',
+    doc_fgts: 'FGTS',
+    doc_pessoais: 'Documentos pessoais',
+    doc_previdenciarios: 'Documentos previdenciários',
+    doc_especiais: 'Atividade especial',
+    doc_medicos: 'Documentos médicos'
+  };
+
+  function grupoDe(caminho) {
+    var p = String(caminho || '').split('/');
+    if (p.length < 3) return '';
+    var campo = p[p.length - 2];
+    if (GRUPOS[campo]) return GRUPOS[campo];
+    for (var k in GRUPOS) if (campo.indexOf(k) === 0) return GRUPOS[k];
+    return '';
+  }
+
   /* traduz uma linha do banco para a forma que admin.js espera */
   function mapa(row) {
     var d = row.dados || {};
@@ -80,7 +103,10 @@
       telefone: row.telefone || r.telefone || '',
       cidade: r.cidade || '',
       estado: r.estado || '',
-      objetivo: r.objetivo || '',
+      // desde 2026-08 o objetivo aceita mais de uma marcação; registros antigos
+      // trazem uma string só, então os dois formatos precisam conviver
+      objetivos: Array.isArray(r.objetivo) ? r.objetivo : (r.objetivo ? [r.objetivo] : []),
+      objetivo: (Array.isArray(r.objetivo) ? r.objetivo.join(' · ') : r.objetivo) || '',
       objetivoDetalhe: r.objetivo_detalhe || '',
       atividades: Array.isArray(r.atividades) ? r.atividades : [],
       vinculos: vincs.map(function (v) {
@@ -106,7 +132,10 @@
         : { tem: false },
       situacoes: (r.situacoes && typeof r.situacoes === 'object') ? r.situacoes : {},
       docs: arqs.map(function (a) {
-        return { nome: a.nome || 'arquivo', tipo: tipoDe(a.nome, a.tipo), peso: a.tamanho || 0, caminho: a.caminho };
+        return {
+          nome: a.nome || 'arquivo', tipo: tipoDe(a.nome, a.tipo),
+          peso: a.tamanho || 0, caminho: a.caminho, grupo: grupoDe(a.caminho)
+        };
       }),
       observacoes: r.observacoes || '',
       recebido: d.enviadoEm || row.criado_em || new Date().toISOString(),

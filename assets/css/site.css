@@ -698,6 +698,11 @@ em,.it{font-style:italic}
   text-transform:uppercase;color:var(--tinta-media);
 }
 .wz-bloco>.sub{font-size:.885rem;color:var(--tinta-fraca);line-height:1.55;margin-top:-.65rem}
+.selo-obrig{
+  margin-left:.6rem;padding:.16em .55em;border:1px solid var(--dourado-esc);border-radius:999px;
+  font-size:.62rem;font-weight:600;letter-spacing:.07em;color:var(--dourado-texto);
+  text-transform:uppercase;vertical-align:.08em;
+}
 
 /* animacao de troca de etapa */
 .wz-etapa{animation:entra-etapa .5s var(--curva) both}
@@ -749,7 +754,9 @@ em,.it{font-style:italic}
   border:1px solid var(--campo-linha);border-radius:2px;background:var(--campo);color:var(--campo-tinta);
   animation:entra-etapa .34s var(--curva) both;
 }
-.arquivo svg.tipo{width:17px;height:17px;color:var(--vinho-marca);flex-shrink:0}
+/* o svgIcone() nao carimba classe, entao mirar em `svg.tipo` nunca pegava e o
+   icone do anexo ficava do tamanho da caixa; o filho direto resolve */
+.arquivo>svg{width:17px;height:17px;color:var(--vinho-marca);flex-shrink:0}
 .arquivo .nome{flex:1;min-width:0;font-size:.87rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .arquivo .peso{font-size:.775rem;color:var(--campo-fraco);flex-shrink:0}
 .arquivo .tira{

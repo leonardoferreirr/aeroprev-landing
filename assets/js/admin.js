@@ -796,6 +796,62 @@
     });
   });
 
+  /* ---------------- excluir cadastro ----------------
+     Confirmação em dois toques no próprio botão: o primeiro arma, o segundo
+     apaga, e sozinho desarma em 6s. Evita o clique acidental sem inventar
+     um modal só para isso. */
+  (function () {
+    var bt = document.getElementById('btExcluir');
+    var txt = document.getElementById('btExcluirTexto');
+    var aviso = document.getElementById('avisoExcluir');
+    if (!bt) return;
+    var armado = false, relogio = null;
+
+    function desarma() {
+      armado = false;
+      clearTimeout(relogio);
+      bt.classList.remove('e-armado');
+      if (aviso) aviso.hidden = true;
+      txt.textContent = 'Excluir cadastro';
+    }
+    // some junto com a ficha, para não reabrir já armado em outro caso
+    document.getElementById('fechaFicha').addEventListener('click', desarma);
+    fundoFicha.addEventListener('click', desarma);
+
+    bt.addEventListener('click', function () {
+      if (!fichaAtual || !window.AeroPrevSB) return;
+
+      if (!armado) {
+        armado = true;
+        bt.classList.add('e-armado');
+        if (aviso) aviso.hidden = false;
+        txt.textContent = 'Confirmar exclusão de ' + (fichaAtual.nome || 'cadastro');
+        relogio = setTimeout(desarma, 6000);
+        return;
+      }
+
+      clearTimeout(relogio);
+      bt.disabled = true;
+      txt.textContent = 'Excluindo…';
+      var caminhos = (fichaAtual.docs || []).map(function (d) { return d.caminho; });
+
+      AeroPrevSB.excluir(fichaAtual._id, caminhos).then(function () {
+        fechaFicha();
+        desarma();
+        return AEROPREV_FONTE.carregar().then(function (regs) {
+          DEMO.registros = regs;
+          desenha();
+        });
+      }).catch(function (e) {
+        alert(e && e.message ? e.message : 'Não foi possível excluir agora.');
+        console.error('[AeroPrev]', e);
+        desarma();
+      }).then(function () {
+        bt.disabled = false;
+      });
+    });
+  })();
+
   /* ---------------- navegacao ---------------- */
   function desenha() {
     var tela = TELAS[estado.tela] || TELAS.painel;

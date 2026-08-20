@@ -47,6 +47,13 @@ drop policy if exists "escritorio_atualiza" on public.submissoes;
 create policy "escritorio_atualiza" on public.submissoes
   for update to authenticated using (true) with check (true);
 
+-- o escritório logado também APAGA um cadastro (usado para tirar os testes).
+-- só quem está autenticado: o site público (anon) continua sem esse direito.
+grant delete on public.submissoes to authenticated;
+drop policy if exists "escritorio_apaga" on public.submissoes;
+create policy "escritorio_apaga" on public.submissoes
+  for delete to authenticated using (true);
+
 -- 3. STORAGE: bucket privado dos documentos ------------------
 -- privado (public = false) e com teto de 20 MB por arquivo.
 insert into storage.buckets (id, name, public, file_size_limit)
@@ -64,6 +71,12 @@ create policy "doc_upload" on storage.objects
 drop policy if exists "doc_le" on storage.objects;
 create policy "doc_le" on storage.objects
   for select to authenticated using (bucket_id = 'documentos');
+
+-- escritório logado: APAGA os anexos junto com o cadastro. Sem isso, excluir
+-- um caso deixaria os PDFs órfãos ocupando o bucket para sempre.
+drop policy if exists "doc_apaga" on storage.objects;
+create policy "doc_apaga" on storage.objects
+  for delete to authenticated using (bucket_id = 'documentos');
 
 -- ============================================================
 -- Pronto. A partir daqui o formulário do site já grava aqui.

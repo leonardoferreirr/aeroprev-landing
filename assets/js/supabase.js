@@ -98,6 +98,44 @@
     });
   }
 
+  /* apaga um cadastro inteiro: primeiro os anexos do bucket, depois a linha.
+     Nessa ordem de propósito: se a remoção dos arquivos falhar, o cadastro
+     continua no painel e dá para tentar de novo. O contrário deixaria PDFs
+     órfãos sem nenhuma tela que os alcance. */
+  function excluir(id, caminhos) {
+    var lista = (caminhos || []).map(function (c) {
+      var s = String(c || '');
+      return s.indexOf(BUCKET + '/') === 0 ? s.slice(BUCKET.length + 1) : s;
+    }).filter(Boolean);
+
+    var anexos = lista.length
+      ? api('/storage/v1/object/' + BUCKET, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prefixes: lista })
+        }).then(function (r) {
+          if (!r.ok) throw new Error('Não foi possível apagar os anexos (HTTP ' + r.status + ').');
+        })
+      : Promise.resolve();
+
+    return anexos.then(function () {
+      return api('/rest/v1/submissoes?id=eq.' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: { Prefer: 'return=representation' }
+      }).then(function (r) {
+        if (!r.ok) throw new Error('Não foi possível apagar o cadastro (HTTP ' + r.status + ').');
+        return r.json().then(function (d) {
+          // o RLS recusa em silêncio devolvendo lista vazia, e não um erro:
+          // sem esta checagem o painel diria "excluído" com a linha ainda lá
+          if (!Array.isArray(d) || !d.length) {
+            throw new Error('O banco recusou a exclusão. Rode o SQL de docs/supabase.sql para liberar a permissão.');
+          }
+          return d[0];
+        });
+      });
+    });
+  }
+
   function sair() {
     var s = ler();
     limpa();
@@ -114,6 +152,7 @@
     sair: sair,
     api: api,
     urlAssinada: urlAssinada,
+    excluir: excluir,
     temSessao: function () { var s = ler(); return !!(s && s.access_token); },
     email: function () { var s = ler(); return s && s.email; }
   };

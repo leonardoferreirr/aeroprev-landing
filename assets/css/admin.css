@@ -381,6 +381,15 @@ tbody tr:last-child td{border-bottom:0}
 .bt-cheio{background:var(--vinho);border-color:var(--vinho);color:#fff}
 .bt-cheio:hover{background:var(--vinho-esc);border-color:var(--vinho-esc);color:#fff}
 .ficha-pe .obs{margin-left:auto;font-size:.75rem;color:var(--tinta-fraca)}
+/* excluir fica no fim da linha e discreto até ser armado, para não competir
+   com as ações do dia a dia nem virar clique de reflexo */
+.bt-perigo{display:inline-flex;align-items:center;gap:.45rem;color:#a8324a;border-color:#e6ccd2;background:#fff}
+.bt-perigo svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.bt-perigo:hover{background:#fdf3f5;border-color:#d99aa8}
+.bt-perigo.e-armado{background:#a8324a;border-color:#a8324a;color:#fff}
+.bt-perigo.e-armado:hover{background:#8d2a3e}
+.bt-perigo[disabled]{opacity:.6;cursor:default}
+.ficha-pe .obs-perigo{margin-left:0;color:#a8324a;flex-basis:100%}
 
 /* ---------- area de trabalho: escolher o caso e anexar ---------- */
 .trabalho{display:grid;grid-template-columns:288px 1fr;align-items:start}

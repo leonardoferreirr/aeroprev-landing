@@ -128,7 +128,7 @@
           // o RLS recusa em silêncio devolvendo lista vazia, e não um erro:
           // sem esta checagem o painel diria "excluído" com a linha ainda lá
           if (!Array.isArray(d) || !d.length) {
-            throw new Error('O banco recusou a exclusão. Rode o SQL de docs/supabase.sql para liberar a permissão.');
+            throw new Error('O banco recusou a exclusão. Rode o SQL de docs/liberar-exclusao.sql no Supabase para liberar a permissão.');
           }
           return d[0];
         });

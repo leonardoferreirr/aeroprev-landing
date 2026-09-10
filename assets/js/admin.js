@@ -145,10 +145,18 @@
     ]);
   }
 
+  /* Quando a leitura do banco falha, a lista fica vazia igual a uma busca sem
+     resultado -- e foi assim que o painel ja disse "nenhum cadastro" com o
+     projeto inteiro fora do ar, o que parece perda de dados e nao e.
+     Enquanto esta bandeira estiver de pe, nenhuma tela afirma que esta vazio. */
+  var semBanco = false;
+
   /* ---------------- tabela ---------------- */
   function tabela(lista, comObjetivo) {
     if (!lista.length) {
-      return el('div', { class: 'vazio', txt: 'Nenhuma pré-análise corresponde a essa busca.' });
+      return el('div', { class: 'vazio', txt: semBanco
+        ? 'Não foi possível carregar os cadastros: o painel não conseguiu falar com o banco de dados. Os cadastros não foram apagados, eles apenas não podem ser lidos agora. Recarregue a página e, se continuar assim, avise o suporte.'
+        : 'Nenhuma pré-análise corresponde a essa busca.' });
     }
     var cabs = ['Protocolo', 'Solicitante', 'Objetivo', 'Situação', 'Anexos', 'Recebida'];
     if (!comObjetivo) cabs.splice(2, 1);
@@ -930,6 +938,18 @@
     if (elAvatar) elAvatar.textContent = eu.slice(0, 2).toUpperCase();
   }
 
+  /* Faixa fixa no topo. O detalhe tecnico vai junto de proposito: quando o
+     escritorio manda print para o suporte, a causa vem no print. */
+  function avisaSemBanco(err) {
+    if (document.getElementById('avisoSemBanco')) return;
+    var faixa = el('div', { class: 'aviso-sembanco', id: 'avisoSemBanco' }, [
+      el('strong', { txt: 'Sem conexão com o banco de dados.' }),
+      el('span', { txt: ' Esta tela não está mostrando os cadastros porque não conseguiu lê-los, não porque eles foram apagados. Recarregue a página; se continuar, encaminhe este aviso ao suporte.' }),
+      el('code', { txt: (err && err.message ? err.message : String(err)) })
+    ]);
+    document.body.insertBefore(faixa, document.body.firstChild);
+  }
+
   // carrega as submissões reais, depois os anexos do escritório, e desenha
   function inicia() {
     conteudo.innerHTML = '<div class="vazio">Carregando as pré-análises…</div>';
@@ -945,6 +965,8 @@
       return;
     }
     console.error('[AeroPrev] falha ao carregar os dados:', err);
+    semBanco = true;
+    avisaSemBanco(err);
     conteudo.innerHTML = '';
     carregaAnexos().then(daHash, daHash);
   });

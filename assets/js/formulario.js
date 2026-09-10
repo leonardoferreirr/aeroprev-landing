@@ -1064,7 +1064,15 @@
         .then(conclui)
         .catch(function (err) {
           peSeguir.disabled = false;
-          alert('Não foi possível enviar agora. Suas respostas continuam salvas neste aparelho, tente novamente em instantes.');
+          /* Chegar aqui significa que as tres tentativas falharam, ou seja,
+             queda longa e nao soluco. O que importa dizer e que nada foi
+             perdido: o rascunho fica no aparelho e a pessoa pode voltar
+             depois pela mesma pagina, no mesmo navegador. */
+          alert('Não foi possível enviar agora.\n\n' +
+                'Suas respostas e seus documentos continuam salvos neste aparelho. ' +
+                'Feche a página se quiser: ao abrir de novo neste mesmo navegador, ' +
+                'você volta de onde parou e é só enviar.\n\n' +
+                'Se continuar assim daqui a alguns minutos, entre em contato com o escritório.');
           console.error('[AeroPrev] falha no envio:', err);
         });
     } else {
@@ -1087,13 +1095,43 @@
 
     function encPath(p) { return p.split('/').map(encodeURIComponent).join('/'); }
 
+    /* Tenta de novo antes de desistir.
+
+       Em 10/09/2026 o projeto do Supabase saiu do ar e voltou, e no meio disso
+       o Postgres reiniciou algumas vezes. Cada tentativa de envio que caiu numa
+       dessas janelas de segundos virou um formulario perdido: a pessoa preencheu
+       onze etapas, subiu cinco documentos, viu "nao foi possivel enviar" e foi
+       embora. Tres tentativas espacadas cobrem esse tipo de queda curta.
+
+       So repete o que faz sentido repetir: erro de rede, 429 e 5xx. Um 400 ou
+       um 401 nao melhoram na segunda tentativa, entao falham na hora. */
+    function envia(url, opts, tentativa) {
+      tentativa = tentativa || 1;
+      var MAX = 3;
+      return fetch(url, opts).then(function (r) {
+        if (r.ok || tentativa >= MAX) return r;
+        if (r.status !== 429 && r.status < 500) return r;   // erro nosso, nao adianta insistir
+        return espera(tentativa).then(function () { return envia(url, opts, tentativa + 1); });
+      }, function (err) {
+        // sem resposta nenhuma: rede caida, DNS fora, servidor sem subir
+        if (tentativa >= MAX) throw err;
+        return espera(tentativa).then(function () { return envia(url, opts, tentativa + 1); });
+      });
+    }
+
+    // 1,2s e depois 3,6s. Espacado o bastante para o servidor voltar, curto o
+    // bastante para a pessoa nao achar que travou.
+    function espera(tentativa) {
+      return new Promise(function (r) { setTimeout(r, 1200 * Math.pow(3, tentativa - 1)); });
+    }
+
     var subidas = [];
     Object.keys(arquivos).forEach(function (campo) {
       (arquivos[campo] || []).forEach(function (f, i) {
         var limpo = (f.name || 'arquivo').replace(/[^\w.\-]+/g, '_');
         var caminho = id + '/' + campo + '/' + (i + 1) + '-' + limpo;
         subidas.push(
-          fetch(base + '/storage/v1/object/' + SUPABASE_BUCKET + '/' + encPath(caminho), {
+          envia(base + '/storage/v1/object/' + SUPABASE_BUCKET + '/' + encPath(caminho), {
             method: 'POST',
             headers: Object.assign({
               'Content-Type': f.type || 'application/octet-stream'
@@ -1121,7 +1159,7 @@
         dados: payload,
         arquivos: anexos
       };
-      return fetch(base + '/rest/v1/submissoes', {
+      return envia(base + '/rest/v1/submissoes', {
         method: 'POST',
         headers: Object.assign({
           'Content-Type': 'application/json',
